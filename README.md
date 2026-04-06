@@ -1,6 +1,5 @@
 # 大厂模拟面试官 Skill
 
-[![EasyClaw Skill](https://img.shields.io/badge/EasyClaw-Skill-blue)](https://easyclaw.com)
 [![Version](https://img.shields.io/badge/version-1.0.0-green)]()
 [![License](https://img.shields.io/badge/license-MIT-orange)]()
 
@@ -24,7 +23,7 @@
 
 ### 安装
 
-将本仓库的 `bigtech-mock-interview/` 文件夹复制到 `~/.easyclaw/workspace/skills/` 目录下，EasyClaw 重启后自动加载。
+将本仓库的 `interview-skills/` 文件夹复制到 `~/.easyclaw/workspace/skills/` 目录下，EasyClaw 重启后自动加载。
 
 ### 使用方法
 
@@ -49,16 +48,16 @@
 ```
 1. 告诉 AI 目标公司 + 岗位名称
         ↓
-2. 粘贴 JD 内容（没有也行，有更好）
+2. 粘贴 JD 内容（没有也行，有更精准）
         ↓
-3. 上传简历（PDF/图片/文字均可，没有也行）
+3. 上传简历（PDF/图片/文字均可，没有也行，有会更有针对性）
         ↓
 4. 获得 JD vs 简历匹配度分析
         ↓
 5. 获得专属面试 10 问
    （含题目类型 / 难度星级 / 参考答案提示 / 追问方向）
         ↓
-6. 获得备考建议（紧急 / 参考 分级）
+6. 获得备战建议（紧急 / 参考 分级）
         ↓
 7. 可选：进入互动模拟模式，一问一答练习
 ```
@@ -91,7 +90,7 @@
 ## 🧠 Skill 架构
 
 ```
-bigtech-mock-interview/
+interview-skills/
 ├── SKILL.md                    # 主入口，完整面试流程指令
 └── references/
     ├── company-profiles.md     # 各大厂面试风格、简历筛选标准、流程
@@ -109,7 +108,7 @@ bigtech-mock-interview/
 
 > 「我要面试字节跳动后端工程师，JD 要求熟悉分布式系统和 Go。我是 3 年经验的 Java 后端，做过电商系统。帮我出 10 道面试题。」
 
-**输出**：JD vs 简历匹配度 + 字节风格算法题 + 分布式系统深挖题 + Java→Go 迁移追问 + STAR 行为题 + 备考建议
+**输出**：JD vs 简历匹配度 + 字节风格算法题 + 分布式系统深挖题 + Java→Go 迁移追问 + STAR 行为题 + 备战建议
 
 ### 场景2：产品岗跨行业跳槽
 
