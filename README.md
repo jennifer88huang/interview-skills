@@ -66,9 +66,9 @@
 git clone https://github.com/jennifer88huang/interview-skills.git
 
 # 2. 复制到 EasyClaw 工作目录
-cp -r interview-skills ~/.Xclaw/workspace/skills/
+cp -r interview-skills ~/.{Xclaw}/workspace/skills/
 
-# 3. 重启 EasyClaw，自动加载，直接使用
+# 3. 重启 {XClaw}，自动加载，直接使用
 ```
 
 ---
