@@ -37,12 +37,15 @@
 
 ## 🚀 快速开始
 
-### 方式一：EasyClaw Skill Store（推荐，0 门槛）
+```bash
+# 1. 克隆仓库
+git clone https://github.com/jennifer88huang/interview-skills.git
 
-1. 打开 **EasyClaw**（小龙虾🦞）
-2. 进入 **Skill Store**，搜索 `interview-skill`，点击安装
-3. 在对话框直接说：
+# 2. 复制到本地 Claw 工作目录
+cp -r interview-skills ~/.{Xclaw}/workspace/skills/
 
+# 3. 重启 {XClaw}，自动加载，直接使用
+```
 ```
 我要面字节跳动后端工程师，帮我模拟面试
 ```
@@ -56,22 +59,6 @@
 ```
 
 全程说话就行，不需要任何配置。
-
----
-
-### 方式二：GitHub 本地使用
-
-```bash
-# 1. 克隆仓库
-git clone https://github.com/jennifer88huang/interview-skills.git
-
-# 2. 复制到 EasyClaw 工作目录
-cp -r interview-skills ~/.{Xclaw}/workspace/skills/
-
-# 3. 重启 {XClaw}，自动加载，直接使用
-```
-
----
 
 ## 📋 使用流程
 
