@@ -7,7 +7,7 @@
 [![Version](https://img.shields.io/badge/version-1.0.0-green)]()
 [![License](https://img.shields.io/badge/license-MIT-orange)]()
 
-<img src="assets/interview-banner.png" alt="Jailbreak Foundry Banner" width="100%">
+<img src="assets/interview-banner1.png" alt="Jailbreak Foundry Banner" width="100%">
 
 *"面经是别人的经历，JD 是你要面的岗位，简历是你走过的路。"*<br>
 这个 Skill 不是给你一套通用题库，而是根据你的目标岗位和个人背景，生成更像真实面试官会问的问题。<br>
