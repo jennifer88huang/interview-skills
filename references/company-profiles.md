@@ -152,6 +152,110 @@
 
 ---
 
+## Google
+
+### 面试流程
+- **社招**：Recruiter screen → 技术电话面（coding）→ onsite / virtual onsite（coding 2-3 轮 + system design 1 轮 + behavioral / Googliness 1 轮）→ hiring committee
+- **校招 / Early career**：以 coding 为主，可能减少 system design 权重
+- **周期**：通常 4~8 周，hiring committee 和 team match 可能拉长
+
+### 简历筛选重点
+- 强 CS 基础、算法能力、复杂系统或高质量工程项目经历
+- L4+ 看独立 owner 项目的复杂度、影响范围和跨团队协作
+- 简历中最好体现规模、复杂度、可靠性、性能或用户影响，而不只是功能交付
+
+### 面试风格
+- Coding 题重视清晰沟通、边界条件、复杂度分析和代码可读性
+- System design 强调需求澄清、抽象建模、可扩展性、可靠性和 trade-off
+- Behavioral 关注 Googliness：协作、谦逊、处理模糊问题、学习能力和用户意识
+- 面试官会持续观察候选人如何拆题、验证假设和接受提示
+
+### 典型题型（技术岗）
+- 设计一个可扩展的 URL shortener / rate limiter / notification system
+- 给定数据流，如何实时统计 top K 或检测异常模式？
+- 讲一次你在信息不完整的情况下推进技术决策的经历
+- 如果你的方案在延迟、成本、可靠性之间冲突，你怎么取舍？
+
+---
+
+## Meta
+
+### 面试流程
+- **社招**：Recruiter screen → technical screen → onsite / virtual onsite（coding 2 轮 + system design 1-2 轮 + behavioral 1 轮）
+- **E5+**：system design 和 behavioral 权重明显上升
+- **周期**：通常 3~6 周，流程节奏相对快
+
+### 简历筛选重点
+- 代码能力、交付速度、产品 impact、复杂系统规模
+- 高级别岗位看跨团队影响力、模糊问题拆解和指标结果
+- 产品/数据相关岗位需要体现实验、增长、推荐、广告或内容生态理解
+
+### 面试风格
+- Coding 节奏快，要求在有限时间内写出可运行、可解释、复杂度合理的解法
+- System design 偏大规模社交、内容分发、消息、广告、推荐和实时系统
+- Behavioral 重视 impact、ownership、处理冲突、在高强度环境下推动结果
+- 面试官常追问“你具体做了什么”和“如何证明这件事有效”
+
+### 典型题型（技术岗）
+- 设计 News Feed / Messenger / Reactions / Ads ranking 的核心系统
+- 给一个数组/图/字符串问题，要求快速写出 bug-free 解法并分析复杂度
+- 讲一次你推动一个指标明显改善的项目，怎么定义和验证成功？
+- 当你和 PM / Tech Lead 对优先级判断不同，你怎么推进？
+
+---
+
+## Amazon（含 AWS、零售、广告等）
+
+### 面试流程
+- **社招**：Recruiter screen → online assessment / technical screen → onsite / loop（coding + system design + Leadership Principles 多轮）→ bar raiser
+- **AWS / 平台岗位**：系统设计、运维可靠性、成本和客户场景权重更高
+- **周期**：通常 3~6 周，loop 中每轮都会覆盖 LP 行为题
+
+### 简历筛选重点
+- 项目 owner 经历、端到端交付、客户价值、可量化结果
+- SDE II+ 看系统设计、故障处理、跨团队推进和技术判断
+- AWS 岗位加分项：云服务、分布式系统、可观测性、SRE、成本优化、安全合规
+
+### 面试风格
+- Leadership Principles 是核心，行为题必须用 STAR 结构回答
+- 常围绕 Customer Obsession、Ownership、Dive Deep、Bias for Action、Deliver Results 深挖
+- 技术题关注工程可落地性、故障场景、可靠性、成本和长期维护
+- Bar raiser 会验证候选人是否高于当前团队招聘标准
+
+### 典型题型（技术岗）
+- 讲一次你 owner 一个失败或延期项目，怎么复盘并修正？
+- 设计一个高可用对象存储 / 消息队列 / 订单系统，如何处理故障和成本？
+- 你如何发现一个隐藏很深的线上问题？用了哪些数据定位？
+- 当客户需求和技术债冲突时，你怎么排序和推动？
+
+---
+
+## Microsoft（含 Azure、Office、Teams、Bing 等）
+
+### 面试流程
+- **社招**：Recruiter screen → technical screen → onsite / virtual loop（coding + design + behavioral + hiring manager）
+- **团队差异**：Azure、AI、Office、Gaming 等团队题型侧重点不同
+- **周期**：通常 3~6 周，部分团队会有 team match 或 HM 深聊
+
+### 简历筛选重点
+- 工程实践、可维护性、云/平台经验、协作影响力
+- Azure/平台岗位看分布式系统、可靠性、安全、性能和运维意识
+- 高级别岗位看跨团队影响、技术领导力和长期产品思维
+
+### 面试风格
+- Coding 更关注可读性、测试意识、边界处理和沟通过程
+- Design 题强调需求澄清、模块边界、演进路径和可维护性
+- Behavioral 常围绕 growth mindset、协作、包容、冲突处理和客户价值
+- 面试气质相对协作型，会看候选人是否能在提示下迭代方案
+
+### 典型题型（技术岗）
+- 设计一个 Teams 消息同步 / 云文件协作 / 多租户配置系统
+- 你如何设计一个可靠、可观测、可灰度发布的服务？
+- 讲一次你主动补齐团队工程质量短板的经历
+- 当线上服务出现区域性故障，你如何定位、止血和复盘？
+
+---
+
 ## 各岗位类型面试重点
 
 详见 `question-design.md`
