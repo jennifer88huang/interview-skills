@@ -34,6 +34,34 @@
 
 ## 🚀 快速开始
 
+### 小龙虾聊天窗口一键安装
+
+在你正在使用的小龙虾聊天窗口里，直接发送这一条命令：
+
+```text
+/skill install git:jennifer88huang/interview-skills@main
+```
+
+安装完成后，直接对小龙虾说：
+
+```text
+我要面字节跳动后端工程师，帮我模拟面试
+```
+
+或：
+
+```text
+帮我模拟阿里产品经理面试，这是 JD 和我的简历
+```
+
+如果你使用的是终端版 OpenClaw，也可以运行：
+
+```bash
+openclaw skills install git:jennifer88huang/interview-skills@main
+```
+
+### 手动安装
+
 ```bash
 # 1. 克隆仓库
 git clone https://github.com/jennifer88huang/interview-skills.git

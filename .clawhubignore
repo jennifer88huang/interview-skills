@@ -1,0 +1,12 @@
+# Keep marketplace/registry packages focused on the skill itself.
+outputs/
+tmp/
+.git/
+.github/
+.DS_Store
+
+# Large visual assets are useful for GitHub docs but not required at runtime.
+assets/*.png
+assets/*.jpg
+assets/*.jpeg
+assets/*.gif
