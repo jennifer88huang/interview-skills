@@ -4,10 +4,10 @@ Generate targeted mock interview questions from a real job description and a can
 
 ## News
 
-- **2026-06-01**: Added `install-skill.sh`, allowing terminal users to run `bash install-skill.sh https://github.com/jennifer88huang/interview-skills.git` from the repository root. The value is a lower-friction OpenClaw local install path that avoids the nonexistent `openclaw skills install` subcommand.
-- **2026-05-28**: Added global big tech interview support for Google, Meta, Amazon/AWS, Microsoft, and related scenarios. The value is company-specific preparation across coding, system design, behavioral, Leadership Principles, and cross-cultural interview styles.
-- **2026-04-24**: Added good-answer vs bad-answer comparisons, HR interview drills, salary negotiation scripts, and full multi-round interview flow simulation. The value is coverage beyond single technical rounds, including follow-ups, HR screening, offer negotiation, and end-to-end interview loops.
-- **2026-04-06**: Added the initial Skill, PRD, JD parsing, resume parsing, company profiles, question design, and BEI/STAR behavioral interview framework. The value is the core ability to generate tailored interview questions from `JD + resume` instead of a generic question bank.
+- **2026-06-01**: Added `install-skill.sh`, allowing terminal users to run `bash install-skill.sh https://github.com/jennifer88huang/interview-skills.git` from the repository root.
+- **2026-05-28**: Added global big tech interview support for Google, Meta, Amazon/AWS, Microsoft, and related scenarios. 
+- **2026-04-24**: Added HR interview drills, salary negotiation scripts, and full multi-round interview flow simulation. 
+- **2026-04-06**: Added the initial Skill, PRD, JD parsing, resume parsing, company profiles, question design, and BEI/STAR behavioral interview framework. 
 
 ## What It Does
 
