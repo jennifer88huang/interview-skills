@@ -34,10 +34,10 @@
 
 ## News
 
-- **2026-06-01**：新增 `install-skill.sh`，终端用户可在仓库根目录运行 `bash install-skill.sh https://github.com/jennifer88huang/interview-skills.git` 完成本地安装。
-- **2026-06-01**：修正 OpenClaw CLI 安装说明，明确 `openclaw skills` 当前只支持 `list`、`info`、`check`，不提供 `install` 子命令。
-- **2026-05-28**：补充海外大厂面试支持，覆盖 Google、Meta、Amazon/AWS、Microsoft 等场景。
-- **2026-05-26**：更新 README 视觉素材与项目展示内容，让 Skill 定位和使用方式更清晰。
+- **2026-06-01**：新增 `install-skill.sh`，支持终端用户在仓库根目录运行 `bash install-skill.sh https://github.com/jennifer88huang/interview-skills.git` 完成本地安装，价值是降低 OpenClaw 手动安装门槛，并避免误用不存在的 `openclaw skills install` 子命令。
+- **2026-05-28**：新增海外大厂面试支持，覆盖 Google、Meta、Amazon/AWS、Microsoft 等场景，价值是让候选人可以按不同公司的 coding、system design、behavioral、Leadership Principles 等风格做定制化准备。
+- **2026-04-24**：新增好答案 vs 差答案对比、HR 面专项训练、薪资谈判话术和多轮完整面试流程，价值是把准备范围从单轮技术题扩展到真实面试链路，覆盖追问、HR、谈薪和一面到终面的连续模拟。
+- **2026-04-06**：新增 Skill 初版、PRD、JD 解析、简历解析、公司画像、题目设计和 BEI/STAR 行为面试框架，价值是建立基于 `JD + 简历` 生成专属面试题的核心能力，而不是输出通用题库。
 
 ---
 
