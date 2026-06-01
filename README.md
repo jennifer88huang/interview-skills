@@ -54,22 +54,26 @@
 帮我模拟阿里产品经理面试，这是 JD 和我的简历
 ```
 
-如果你使用的是终端版 OpenClaw，也可以运行：
+### 终端版 OpenClaw 手动安装
+
+> 当前 OpenClaw CLI 的 `openclaw skills` 命令只支持 `list`、`info`、`check`，不提供 `install` 子命令。请使用下面的手动安装方式。
 
 ```bash
-openclaw skills install git:jennifer88huang/interview-skills@main
+# 1. 准备 OpenClaw 本地 skills 目录
+mkdir -p ~/.openclaw/skills
+
+# 2. 克隆到 OpenClaw skills 目录
+git clone https://github.com/jennifer88huang/interview-skills.git ~/.openclaw/skills/interview-skills
+
+# 3. 验证 OpenClaw 是否能识别
+openclaw skills info interview-skills
+openclaw skills list
 ```
 
-### 手动安装
+如果本地已经克隆过，更新时运行：
 
 ```bash
-# 1. 克隆仓库
-git clone https://github.com/jennifer88huang/interview-skills.git
-
-# 2. 复制到本地 Claw 工作目录
-cp -r interview-skills ~/.{Xclaw}/workspace/skills/
-
-# 3. 重启 {XClaw}，自动加载，直接使用
+git -C ~/.openclaw/skills/interview-skills pull --ff-only
 ```
 
 ### 一句话开用

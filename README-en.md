@@ -38,10 +38,19 @@ Install from OpenClaw:
 /skill install git:jennifer88huang/interview-skills@main
 ```
 
-Or with the OpenClaw CLI:
+For terminal-based OpenClaw, install manually. The current `openclaw skills` command supports `list`, `info`, and `check`; it does not provide an `install` subcommand.
 
 ```bash
-openclaw skills install git:jennifer88huang/interview-skills@main
+mkdir -p ~/.openclaw/skills
+git clone https://github.com/jennifer88huang/interview-skills.git ~/.openclaw/skills/interview-skills
+openclaw skills info interview-skills
+openclaw skills list
+```
+
+To update an existing local install:
+
+```bash
+git -C ~/.openclaw/skills/interview-skills pull --ff-only
 ```
 
 Then start with one sentence:
