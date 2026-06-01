@@ -521,13 +521,15 @@ offer 低了怎么谈
 ### 方式二：GitHub 本地部署
 
 ```bash
-# 1. 克隆仓库
-git clone https://github.com/jennifer88huang/interview-skills.git
+# 1. 准备 OpenClaw 本地 skills 目录
+mkdir -p ~/.openclaw/skills
 
-# 2. 将 Skill 复制到 EasyClaw 工作目录
-cp -r interview-skills ~/.Xclaw/workspace/skills/
+# 2. 克隆到 OpenClaw skills 目录
+git clone https://github.com/jennifer88huang/interview-skills.git ~/.openclaw/skills/interview-skills
 
-# 3. 重启 EasyClaw，自动加载
+# 3. 验证 OpenClaw 是否能识别
+openclaw skills info interview-skills
+openclaw skills list
 
 # 4. 在对话框直接使用
 # 示例：「帮我模拟阿里产品经理面试，这是我的 JD 和简历」
