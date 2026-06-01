@@ -2,6 +2,13 @@
 
 Generate targeted mock interview questions from a real job description and a candidate resume. This skill simulates company-specific interview styles across technical rounds, behavioral rounds, HR interviews, salary negotiation, and full multi-round interview loops.
 
+## News
+
+- **2026-06-01**: Added `install-skill.sh` so terminal users can run `bash install-skill.sh https://github.com/jennifer88huang/interview-skills.git` from the repository root.
+- **2026-06-01**: Fixed the OpenClaw CLI install docs. `openclaw skills` currently supports `list`, `info`, and `check`; it does not provide an `install` subcommand.
+- **2026-05-28**: Added global big tech interview support for Google, Meta, Amazon/AWS, Microsoft, and related scenarios.
+- **2026-05-26**: Updated README visuals and project presentation to make the skill positioning and usage clearer.
+
 ## What It Does
 
 - Parses the target JD into hard skills, soft skills, and hidden evaluation signals.
