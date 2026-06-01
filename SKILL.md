@@ -1,11 +1,11 @@
 ---
 name: interview-skills
 description: 大厂 AI 模拟面试官。覆盖阿里、腾讯、字节跳动、百度、美团、京东、华为、滴滴、拼多多、Google、Meta、Amazon、Microsoft 等国内外头部互联网/科技公司。用户输入目标公司名、岗位名和 JD 内容，上传简历后，Agent 扮演大厂面试官，结合 JD 要求与简历情况，输出 10 道高质量面试题（含难度、参考答案提示、追问方向），并支持生成「好答案 vs 差答案」对比示例、HR 面专项训练、薪资谈判话术指引与多轮完整面试连贯模拟。触发词：大厂面试、海外大厂面试、模拟面试、面试官、帮我面试、面试准备、interview practice、mock interview、我要面字节、阿里面试题、Google 面试、Meta 面试、Amazon 面试、AWS 面试、Microsoft 面试、帮我出10道面试题、好答案 vs 差答案、示范回答、回答对比、模拟HR面、离职原因、薪资谈判、职业规划、offer谈判、薪资话术、完整面试流程、多轮模拟、一面二面三面。
-version: 1.1.0
 metadata:
   openclaw:
     emoji: "🎯"
     homepage: https://github.com/jennifer88huang/interview-skills
+    version: 1.1.0
 allowed-tools: Read, Write, Edit, Bash
 ---
 
