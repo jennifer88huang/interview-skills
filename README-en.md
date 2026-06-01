@@ -41,6 +41,13 @@ Install from OpenClaw:
 For terminal-based OpenClaw, install manually. The current `openclaw skills` command supports `list`, `info`, and `check`; it does not provide an `install` subcommand.
 
 ```bash
+# Run from this repository root.
+bash install-skill.sh https://github.com/jennifer88huang/interview-skills.git
+```
+
+Equivalent manual install:
+
+```bash
 mkdir -p ~/.openclaw/skills
 git clone https://github.com/jennifer88huang/interview-skills.git ~/.openclaw/skills/interview-skills
 openclaw skills info interview-skills

@@ -15,6 +15,13 @@
 终端版 OpenClaw 请手动安装。当前 `openclaw skills` 命令只支持 `list`、`info`、`check`，没有 `install` 子命令。
 
 ```bash
+# 在本仓库根目录运行
+bash install-skill.sh https://github.com/jennifer88huang/interview-skills.git
+```
+
+等价的手动安装方式：
+
+```bash
 mkdir -p ~/.openclaw/skills
 git clone https://github.com/jennifer88huang/interview-skills.git ~/.openclaw/skills/interview-skills
 openclaw skills info interview-skills

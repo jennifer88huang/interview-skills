@@ -521,17 +521,14 @@ offer 低了怎么谈
 ### 方式二：GitHub 本地部署
 
 ```bash
-# 1. 准备 OpenClaw 本地 skills 目录
-mkdir -p ~/.openclaw/skills
+# 1. 在本仓库根目录运行安装脚本
+bash install-skill.sh https://github.com/jennifer88huang/interview-skills.git
 
-# 2. 克隆到 OpenClaw skills 目录
-git clone https://github.com/jennifer88huang/interview-skills.git ~/.openclaw/skills/interview-skills
-
-# 3. 验证 OpenClaw 是否能识别
+# 2. 验证 OpenClaw 是否能识别
 openclaw skills info interview-skills
 openclaw skills list
 
-# 4. 在对话框直接使用
+# 3. 在对话框直接使用
 # 示例：「帮我模拟阿里产品经理面试，这是我的 JD 和简历」
 ```
 
