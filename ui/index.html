@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI 模拟面试官 · 轻量 UI 原型</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <img src="../assets/interview-banner1.png" alt="AI 模拟面试官" />
+          <div>
+            <p class="eyebrow">interview-skills</p>
+            <h1>AI 模拟面试官</h1>
+          </div>
+        </div>
+        <div class="status-strip" aria-label="流程状态">
+          <span class="status-dot active"></span>
+          <span>输入材料</span>
+          <span class="status-line"></span>
+          <span class="status-dot"></span>
+          <span>生成面试</span>
+          <span class="status-line"></span>
+          <span class="status-dot"></span>
+          <span>追问演练</span>
+        </div>
+      </header>
+
+      <section class="workspace">
+        <aside class="setup-panel" aria-label="面试设置">
+          <div class="panel-head">
+            <h2>面试设置</h2>
+            <button class="icon-button" id="resetButton" type="button" title="重置">↺</button>
+          </div>
+
+          <label>
+            目标公司
+            <input id="companyInput" type="text" placeholder="例如：阿里巴巴 / 字节跳动 / Google" />
+          </label>
+
+          <label>
+            目标岗位
+            <input id="roleInput" type="text" placeholder="例如：后端工程师 / 产品经理 / 数据分析师" />
+          </label>
+
+          <div class="field-group">
+            <span class="field-label">面试轮次</span>
+            <div class="segmented" role="group" aria-label="面试轮次">
+              <button class="selected" type="button" data-round="一面">一面</button>
+              <button type="button" data-round="二面">二面</button>
+              <button type="button" data-round="三面">三面</button>
+              <button type="button" data-round="HR 面">HR 面</button>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <span class="field-label">训练模式</span>
+            <label class="check-row">
+              <input id="modeQuestions" type="checkbox" checked />
+              生成 10 问
+            </label>
+            <label class="check-row">
+              <input id="modeFollowup" type="checkbox" checked />
+              自动追问
+            </label>
+            <label class="check-row">
+              <input id="modeSalary" type="checkbox" />
+              谈薪话术
+            </label>
+          </div>
+
+          <button id="generateButton" class="primary-action" type="button">开始模拟面试</button>
+          <p class="privacy-note">本原型仅在浏览器本地展示输入状态，不上传文件。</p>
+        </aside>
+
+        <section class="input-panel" aria-label="材料输入">
+          <div class="input-column">
+            <div class="section-title">
+              <h2>JD 内容</h2>
+              <span>链接 / 文本 / 图片 / Word / PDF</span>
+            </div>
+
+            <div class="tabs" role="tablist" aria-label="JD 输入方式">
+              <button class="selected" type="button" data-tab-target="jd-link">链接</button>
+              <button type="button" data-tab-target="jd-text">文本</button>
+              <button type="button" data-tab-target="jd-file">文件</button>
+            </div>
+
+            <div class="tab-panel active" id="jd-link">
+              <label>
+                JD 链接
+                <input id="jdLink" type="url" placeholder="https://..." />
+              </label>
+            </div>
+
+            <div class="tab-panel" id="jd-text">
+              <label>
+                粘贴 JD 原文
+                <textarea id="jdText" placeholder="粘贴岗位职责、任职要求、加分项等内容"></textarea>
+              </label>
+            </div>
+
+            <div class="tab-panel" id="jd-file">
+              <label class="dropzone">
+                <input id="jdFile" type="file" accept=".pdf,.doc,.docx,.txt,.md,image/*" />
+                <strong>上传 JD 文件</strong>
+                <span>支持 PDF、Word、图片、TXT、Markdown</span>
+              </label>
+              <div class="file-meta" id="jdFileMeta">尚未选择文件</div>
+            </div>
+          </div>
+
+          <div class="input-column">
+            <div class="section-title">
+              <h2>简历内容</h2>
+              <span>文本 / 图片 / Word / PDF</span>
+            </div>
+
+            <div class="tabs" role="tablist" aria-label="简历输入方式">
+              <button class="selected" type="button" data-tab-target="resume-text">文本</button>
+              <button type="button" data-tab-target="resume-file">文件</button>
+            </div>
+
+            <div class="tab-panel active" id="resume-text">
+              <label>
+                粘贴简历内容
+                <textarea id="resumeText" placeholder="粘贴教育背景、工作经历、项目经历、技术栈等内容"></textarea>
+              </label>
+            </div>
+
+            <div class="tab-panel" id="resume-file">
+              <label class="dropzone">
+                <input id="resumeFile" type="file" accept=".pdf,.doc,.docx,.txt,.md,image/*" />
+                <strong>上传简历文件</strong>
+                <span>支持 PDF、Word、图片、TXT、Markdown</span>
+              </label>
+              <div class="file-meta" id="resumeFileMeta">尚未选择文件</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="output-panel" aria-live="polite" aria-label="模拟输出">
+          <div class="panel-head">
+            <h2>模拟结果</h2>
+            <span id="outputState">等待输入</span>
+          </div>
+
+          <div class="metric-grid">
+            <div class="metric">
+              <span>JD 匹配度</span>
+              <strong id="matchScore">--</strong>
+            </div>
+            <div class="metric">
+              <span>题目数量</span>
+              <strong id="questionCount">--</strong>
+            </div>
+            <div class="metric">
+              <span>预计时长</span>
+              <strong id="duration">--</strong>
+            </div>
+          </div>
+
+          <div class="result-block">
+            <h3>匹配度分析</h3>
+            <ul id="analysisList">
+              <li>输入 JD 和简历后生成强匹配、需补强和简历弱点。</li>
+            </ul>
+          </div>
+
+          <div class="result-block">
+            <h3>面试 10 问预览</h3>
+            <div id="questionList" class="question-list">
+              <p class="empty-state">点击「开始模拟面试」后，这里会展示按公司风格生成的问题。</p>
+            </div>
+          </div>
+
+          <div class="result-block">
+            <h3>下一步追问</h3>
+            <div class="followup-box" id="followupBox">回答任意问题后，AI 面试官会基于你的回答继续深挖。</div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
