@@ -18,6 +18,10 @@ const resumeText = document.querySelector("#resumeText");
 const providerSelect = document.querySelector("#providerSelect");
 const apiKeyInput = document.querySelector("#apiKeyInput");
 const modelInput = document.querySelector("#modelInput");
+const customModelInput = document.querySelector("#customModelInput");
+const customEndpointInput = document.querySelector("#customEndpointInput");
+const customModelField = document.querySelector("#customModelField");
+const customEndpointField = document.querySelector("#customEndpointField");
 const outputState = document.querySelector("#outputState");
 const matchScore = document.querySelector("#matchScore");
 const questionCount = document.querySelector("#questionCount");
@@ -48,11 +52,51 @@ const modelCatalog = {
     ["deepseek-chat", "DeepSeek Chat"],
     ["deepseek-reasoner", "DeepSeek Reasoner"],
   ],
+  qwen: [
+    ["qwen-plus", "Qwen Plus"],
+    ["qwen-max", "Qwen Max"],
+    ["qwen-turbo", "Qwen Turbo"],
+  ],
+  kimi: [
+    ["kimi-k2.6", "Kimi K2.6"],
+    ["kimi-k2.5", "Kimi K2.5"],
+    ["moonshot-v1-128k", "Moonshot v1 128K"],
+  ],
+  glm: [
+    ["glm-4.5", "GLM-4.5"],
+    ["glm-4.5-air", "GLM-4.5 Air"],
+    ["glm-4-plus", "GLM-4 Plus"],
+  ],
+  minimax: [
+    ["minimax-m2.7", "MiniMax M2.7"],
+    ["abab6.5s-chat", "abab6.5s Chat"],
+    ["abab6.5g-chat", "abab6.5g Chat"],
+  ],
+  mimo: [
+    ["mimo-v2.5-pro", "MiMo v2.5 Pro"],
+  ],
+  xai: [
+    ["grok-4", "Grok 4"],
+    ["grok-3", "Grok 3"],
+    ["grok-3-mini", "Grok 3 Mini"],
+  ],
+  mistral: [
+    ["mistral-large-latest", "Mistral Large"],
+    ["mistral-small-latest", "Mistral Small"],
+    ["codestral-latest", "Codestral"],
+  ],
+  perplexity: [
+    ["sonar-pro", "Sonar Pro"],
+    ["sonar", "Sonar"],
+  ],
   openrouter: [
     ["openai/gpt-4.1-mini", "OpenAI GPT-4.1 Mini"],
     ["anthropic/claude-3.5-sonnet", "Claude 3.5 Sonnet"],
     ["google/gemini-flash-1.5", "Gemini Flash 1.5"],
     ["deepseek/deepseek-chat", "DeepSeek Chat"],
+  ],
+  other: [
+    ["custom", "自定义模型"],
   ],
 };
 const providerLabels = {
@@ -60,7 +104,29 @@ const providerLabels = {
   anthropic: "Anthropic",
   gemini: "Google Gemini",
   deepseek: "DeepSeek",
+  qwen: "Qwen",
+  kimi: "Kimi",
+  glm: "GLM",
+  minimax: "MiniMax",
+  mimo: "MiMo",
+  xai: "xAI",
+  mistral: "Mistral",
+  perplexity: "Perplexity",
   openrouter: "OpenRouter",
+  other: "自定义模型",
+};
+const providerConfig = {
+  deepseek: { type: "openai-compatible", endpoint: "https://api.deepseek.com/chat/completions" },
+  qwen: { type: "openai-compatible", endpoint: "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions" },
+  kimi: { type: "openai-compatible", endpoint: "https://api.moonshot.cn/v1/chat/completions" },
+  glm: { type: "openai-compatible", endpoint: "https://open.bigmodel.cn/api/paas/v4/chat/completions" },
+  minimax: { type: "openai-compatible", endpoint: "https://api.minimax.chat/v1/chat/completions" },
+  mimo: { type: "openai-compatible", needsEndpoint: true },
+  xai: { type: "openai-compatible", endpoint: "https://api.x.ai/v1/chat/completions" },
+  mistral: { type: "openai-compatible", endpoint: "https://api.mistral.ai/v1/chat/completions" },
+  perplexity: { type: "openai-compatible", endpoint: "https://api.perplexity.ai/chat/completions" },
+  openrouter: { type: "openai-compatible", endpoint: "https://openrouter.ai/api/v1/chat/completions" },
+  other: { type: "openai-compatible", needsEndpoint: true, needsCustomModel: true },
 };
 
 function setProgressStep(step) {
@@ -88,6 +154,7 @@ function setProgressStep(step) {
 function bindProviderModels() {
   const renderModels = () => {
     const provider = providerSelect.value;
+    const config = providerConfig[provider] || {};
     modelInput.replaceChildren();
     modelCatalog[provider].forEach(([value, label]) => {
       const option = document.createElement("option");
@@ -95,6 +162,8 @@ function bindProviderModels() {
       option.textContent = label;
       modelInput.append(option);
     });
+    customModelField.classList.toggle("hidden", !config.needsCustomModel);
+    customEndpointField.classList.toggle("hidden", !config.needsEndpoint);
   };
 
   providerSelect.addEventListener("change", renderModels);
@@ -103,6 +172,11 @@ function bindProviderModels() {
 
 function getProviderLabel() {
   return providerLabels[providerSelect.value] || "所选模型";
+}
+
+function getSelectedModel() {
+  const config = providerConfig[providerSelect.value] || {};
+  return config.needsCustomModel ? customModelInput.value.trim() : modelInput.value;
 }
 
 function bindTabs() {
@@ -370,19 +444,20 @@ async function callOpenAICompatible(prompt, endpoint, apiKey, model, extraHeader
 
 async function callModel(prompt) {
   const provider = providerSelect.value;
+  const config = providerConfig[provider] || {};
   const apiKey = apiKeyInput.value.trim();
-  const model = modelInput.value;
+  const model = getSelectedModel();
   if (!apiKey) throw new Error("请先填写所选供应商的 API Key。");
+  if (!model) throw new Error("请先选择或输入模型名。");
 
-  if (provider === "deepseek") {
-    return callOpenAICompatible(prompt, "https://api.deepseek.com/chat/completions", apiKey, model);
-  }
-
-  if (provider === "openrouter") {
-    return callOpenAICompatible(prompt, "https://openrouter.ai/api/v1/chat/completions", apiKey, model, {
+  if (config.type === "openai-compatible") {
+    const endpoint = config.needsEndpoint ? customEndpointInput.value.trim() : config.endpoint;
+    if (!endpoint) throw new Error("请填写 OpenAI-compatible API 地址。");
+    const headers = provider === "openrouter" ? {
       "HTTP-Referer": window.location.href,
       "X-Title": "interview-skills mock interview",
-    });
+    } : {};
+    return callOpenAICompatible(prompt, endpoint, apiKey, model, headers);
   }
 
   if (provider === "anthropic") {

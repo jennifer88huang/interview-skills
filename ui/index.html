@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>AI 模拟面试官 · 轻量 UI 原型</title>
-    <link rel="stylesheet" href="./styles.css?v=20260603-provider-progress" />
+    <link rel="stylesheet" href="./styles.css?v=20260603-provider-custom" />
   </head>
   <body>
     <main class="app-shell">
@@ -76,16 +76,33 @@
             <label>
               模型供应商
               <select id="providerSelect">
-                <option value="openai">OpenAI</option>
+                <option value="openai">OpenAI / GPT</option>
                 <option value="anthropic">Anthropic Claude</option>
                 <option value="gemini">Google Gemini</option>
                 <option value="deepseek">DeepSeek</option>
+                <option value="qwen">Qwen</option>
+                <option value="kimi">Kimi</option>
+                <option value="glm">GLM</option>
+                <option value="minimax">MiniMax</option>
+                <option value="mimo">MiMo</option>
+                <option value="xai">xAI Grok</option>
+                <option value="mistral">Mistral</option>
+                <option value="perplexity">Perplexity</option>
                 <option value="openrouter">OpenRouter</option>
+                <option value="other">Others / 自定义</option>
               </select>
             </label>
             <label>
               模型
               <select id="modelInput"></select>
+            </label>
+            <label id="customModelField" class="conditional-field hidden">
+              自定义模型名
+              <input id="customModelInput" type="text" placeholder="例如：provider/model-name" />
+            </label>
+            <label id="customEndpointField" class="conditional-field hidden">
+              API 地址
+              <input id="customEndpointInput" type="url" placeholder="https://.../v1/chat/completions" />
             </label>
             <label>
               API Key
@@ -208,6 +225,6 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js"></script>
-    <script src="./app.js?v=20260603-provider-progress"></script>
+    <script src="./app.js?v=20260603-provider-custom"></script>
   </body>
 </html>
