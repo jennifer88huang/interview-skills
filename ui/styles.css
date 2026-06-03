@@ -395,6 +395,33 @@ textarea:focus {
   line-height: 1.45;
 }
 
+.answer-input {
+  min-height: 86px;
+  margin-top: 10px;
+  font-size: 13px;
+}
+
+.question-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.question-actions button {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.question-actions button:hover {
+  background: var(--accent-strong);
+}
+
 .followup-box {
   min-height: 76px;
   padding: 12px;
@@ -402,6 +429,30 @@ textarea:focus {
   border-radius: 8px;
   background: #ecfdf5;
   line-height: 1.5;
+}
+
+.followup-entry + .followup-entry {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(15, 118, 110, 0.22);
+}
+
+.followup-entry strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.followup-entry p {
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.followup-entry p:first-of-type {
+  color: var(--muted);
+}
+
+.followup-entry p:last-child {
+  margin-bottom: 0;
 }
 
 @media (max-width: 1180px) {
