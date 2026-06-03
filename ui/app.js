@@ -1,5 +1,7 @@
 const state = {
   round: "一面",
+  questions: [],
+  followups: [],
 };
 
 const companyInput = document.querySelector("#companyInput");
@@ -108,11 +110,88 @@ function buildQuestions(company, role) {
   return base;
 }
 
+function getQuestionCategory(index) {
+  if (index < 4) return "专业/基础";
+  if (index < 7) return "项目深挖";
+  return "行为/收尾";
+}
+
+function buildFollowup(question, answer, index) {
+  const company = companyInput.value.trim() || "目标公司";
+  const role = roleInput.value.trim() || "目标岗位";
+  const cleanAnswer = answer.trim();
+  const answerLength = cleanAnswer.length;
+  const category = getQuestionCategory(index);
+
+  if (!cleanAnswer) {
+    return "请先输入你的回答，再继续追问。我会重点看你的职责边界、关键动作、结果证据和复盘深度。";
+  }
+
+  if (answerLength < 40) {
+    return `你刚才的回答还比较短。请继续补充：在这个案例里，你具体负责什么、为什么这么做、结果如何量化，以及它和 ${company} ${role} 的要求有什么对应关系？`;
+  }
+
+  if (/我们|团队|大家/.test(cleanAnswer) && !/我/.test(cleanAnswer)) {
+    return "你用了较多团队视角。请把回答切到个人贡献：哪一部分是你独立负责的？关键决策是谁做的？如果没有你，结果会有什么差异？";
+  }
+
+  if (!/[0-9一二三四五六七八九十百千万%]/.test(cleanAnswer)) {
+    return "你的回答缺少结果证据。请补充 1-2 个可验证指标，例如规模、周期、转化率、成本、效率、错误率或业务影响。";
+  }
+
+  if (category === "项目深挖") {
+    return `继续深挖这个项目：当时最大的约束是什么？你放弃过哪些方案？如果在 ${company} ${role} 的场景重做一次，你会改哪一个关键决策？`;
+  }
+
+  if (category === "行为/收尾") {
+    return "我追问一个行为细节：这个选择背后的真实动机是什么？当时有没有利益冲突或压力？你现在复盘，最想修正的一个动作是什么？";
+  }
+
+  return "请进一步讲清楚底层逻辑：这个结论依赖哪些前提？如果面试官挑战其中一个前提，你会用什么事实或案例支撑？";
+}
+
+function renderFollowupHistory() {
+  if (!state.followups.length) {
+    followupBox.textContent = document.querySelector("#modeFollowup").checked
+      ? "选择一道题并输入回答后，AI 面试官会基于你的回答继续追问。"
+      : "已关闭自动追问，可在题目下方手动点击「生成追问」练习。";
+    return;
+  }
+
+  followupBox.replaceChildren();
+  state.followups.slice(-3).forEach((item) => {
+    const entry = document.createElement("article");
+    const title = document.createElement("strong");
+    const question = document.createElement("p");
+    const followup = document.createElement("p");
+
+    entry.className = "followup-entry";
+    title.textContent = `Q${item.index + 1} 追问`;
+    question.textContent = item.question;
+    followup.textContent = item.followup;
+
+    entry.append(title, question, followup);
+    followupBox.append(entry);
+  });
+}
+
+function handleFollowup(index) {
+  const answer = document.querySelector(`#answer-${index}`).value;
+  const question = state.questions[index];
+  const followup = buildFollowup(question, answer, index);
+
+  state.followups.push({ index, question, answer, followup });
+  outputState.textContent = "已生成追问";
+  renderFollowupHistory();
+}
+
 function renderResult() {
   const materialLevel = getMaterialLevel();
   const company = companyInput.value.trim();
   const role = roleInput.value.trim();
   const questions = buildQuestions(company, role);
+  state.questions = questions;
+  state.followups = [];
 
   outputState.textContent = "已生成原型结果";
   matchScore.textContent = materialLevel === "complete" ? "86%" : materialLevel === "partial" ? "62%" : "待补充";
@@ -143,18 +222,28 @@ function renderResult() {
     const item = document.createElement("article");
     const title = document.createElement("strong");
     const body = document.createElement("span");
+    const answer = document.createElement("textarea");
+    const actions = document.createElement("div");
+    const button = document.createElement("button");
 
     item.className = "question-item";
-    title.textContent = `Q${index + 1} · ${index < 4 ? "专业/基础" : index < 7 ? "项目深挖" : "行为/收尾"}`;
+    title.textContent = `Q${index + 1} · ${getQuestionCategory(index)}`;
     body.textContent = question;
+    answer.id = `answer-${index}`;
+    answer.className = "answer-input";
+    answer.placeholder = "输入你的回答后生成追问";
+    answer.rows = 3;
+    actions.className = "question-actions";
+    button.type = "button";
+    button.textContent = "生成追问";
+    button.addEventListener("click", () => handleFollowup(index));
+    actions.append(button);
 
-    item.append(title, body);
+    item.append(title, body, answer, actions);
     questionList.append(item);
   });
 
-  followupBox.textContent = document.querySelector("#modeFollowup").checked
-    ? "示例追问：你刚才提到自己负责核心模块，请具体说明边界、关键决策、失败方案和可量化结果。"
-    : "已关闭自动追问，可在真实产品中改为手动点击「继续追问」。";
+  renderFollowupHistory();
 }
 
 function resetAll() {
@@ -173,6 +262,8 @@ function resetAll() {
   duration.textContent = "--";
   analysisList.innerHTML = "<li>输入 JD 和简历后生成强匹配、需补强和简历弱点。</li>";
   questionList.innerHTML = '<p class="empty-state">点击「开始模拟面试」后，这里会展示按公司风格生成的问题。</p>';
+  state.questions = [];
+  state.followups = [];
   followupBox.textContent = "回答任意问题后，AI 面试官会基于你的回答继续深挖。";
 }
 
