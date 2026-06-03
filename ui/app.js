@@ -15,6 +15,7 @@ const roleInput = document.querySelector("#roleInput");
 const jdLink = document.querySelector("#jdLink");
 const jdText = document.querySelector("#jdText");
 const resumeText = document.querySelector("#resumeText");
+const providerSelect = document.querySelector("#providerSelect");
 const apiKeyInput = document.querySelector("#apiKeyInput");
 const modelInput = document.querySelector("#modelInput");
 const outputState = document.querySelector("#outputState");
@@ -25,6 +26,84 @@ const analysisList = document.querySelector("#analysisList");
 const interviewStage = document.querySelector("#interviewStage");
 const followupBox = document.querySelector("#followupBox");
 const generateButton = document.querySelector("#generateButton");
+const progressSteps = ["materials", "interview", "followup"];
+const modelCatalog = {
+  openai: [
+    ["gpt-4.1-mini", "GPT-4.1 Mini"],
+    ["gpt-4.1", "GPT-4.1"],
+    ["gpt-4o-mini", "GPT-4o Mini"],
+    ["gpt-4o", "GPT-4o"],
+  ],
+  anthropic: [
+    ["claude-3-5-sonnet-latest", "Claude 3.5 Sonnet"],
+    ["claude-3-5-haiku-latest", "Claude 3.5 Haiku"],
+    ["claude-3-opus-latest", "Claude 3 Opus"],
+  ],
+  gemini: [
+    ["gemini-1.5-flash", "Gemini 1.5 Flash"],
+    ["gemini-1.5-pro", "Gemini 1.5 Pro"],
+    ["gemini-2.0-flash", "Gemini 2.0 Flash"],
+  ],
+  deepseek: [
+    ["deepseek-chat", "DeepSeek Chat"],
+    ["deepseek-reasoner", "DeepSeek Reasoner"],
+  ],
+  openrouter: [
+    ["openai/gpt-4.1-mini", "OpenAI GPT-4.1 Mini"],
+    ["anthropic/claude-3.5-sonnet", "Claude 3.5 Sonnet"],
+    ["google/gemini-flash-1.5", "Gemini Flash 1.5"],
+    ["deepseek/deepseek-chat", "DeepSeek Chat"],
+  ],
+};
+const providerLabels = {
+  openai: "OpenAI",
+  anthropic: "Anthropic",
+  gemini: "Google Gemini",
+  deepseek: "DeepSeek",
+  openrouter: "OpenRouter",
+};
+
+function setProgressStep(step) {
+  const activeIndex = progressSteps.indexOf(step);
+
+  progressSteps.forEach((item, index) => {
+    const dot = document.querySelector(`[data-step-dot="${item}"]`);
+    const label = document.querySelector(`[data-step-label="${item}"]`);
+    const line = document.querySelector(`[data-step-line="${item}"]`);
+    const isActive = index === activeIndex;
+    const isDone = index < activeIndex;
+
+    [dot, label].forEach((node) => {
+      if (!node) return;
+      node.classList.toggle("active", isActive);
+      node.classList.toggle("done", isDone);
+    });
+
+    if (line) {
+      line.classList.toggle("done", index <= activeIndex);
+    }
+  });
+}
+
+function bindProviderModels() {
+  const renderModels = () => {
+    const provider = providerSelect.value;
+    modelInput.replaceChildren();
+    modelCatalog[provider].forEach(([value, label]) => {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = label;
+      modelInput.append(option);
+    });
+  };
+
+  providerSelect.addEventListener("change", renderModels);
+  renderModels();
+}
+
+function getProviderLabel() {
+  return providerLabels[providerSelect.value] || "所选模型";
+}
 
 function bindTabs() {
   document.querySelectorAll(".tabs").forEach((tabs) => {
@@ -254,10 +333,102 @@ function parseJsonText(text) {
   }
 }
 
-async function callOpenAI(prompt) {
+function extractChatChoice(data) {
+  return data.choices?.[0]?.message?.content?.trim() || "";
+}
+
+function extractAnthropicText(data) {
+  return (data.content || []).map((item) => item.text || "").join("\n").trim();
+}
+
+function extractGeminiText(data) {
+  return (data.candidates?.[0]?.content?.parts || []).map((part) => part.text || "").join("\n").trim();
+}
+
+async function callOpenAICompatible(prompt, endpoint, apiKey, model, extraHeaders = {}) {
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+      ...extraHeaders,
+    },
+    body: JSON.stringify({
+      model,
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.4,
+    }),
+  });
+
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(`模型请求失败：${response.status} ${message}`);
+  }
+
+  return extractChatChoice(await response.json());
+}
+
+async function callModel(prompt) {
+  const provider = providerSelect.value;
   const apiKey = apiKeyInput.value.trim();
-  const model = modelInput.value.trim() || "gpt-4.1-mini";
-  if (!apiKey) throw new Error("请先填写 OpenAI API Key。");
+  const model = modelInput.value;
+  if (!apiKey) throw new Error("请先填写所选供应商的 API Key。");
+
+  if (provider === "deepseek") {
+    return callOpenAICompatible(prompt, "https://api.deepseek.com/chat/completions", apiKey, model);
+  }
+
+  if (provider === "openrouter") {
+    return callOpenAICompatible(prompt, "https://openrouter.ai/api/v1/chat/completions", apiKey, model, {
+      "HTTP-Referer": window.location.href,
+      "X-Title": "interview-skills mock interview",
+    });
+  }
+
+  if (provider === "anthropic") {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: 1800,
+        temperature: 0.4,
+        messages: [{ role: "user", content: prompt }],
+      }),
+    });
+
+    if (!response.ok) {
+      const message = await response.text();
+      throw new Error(`Anthropic 请求失败：${response.status} ${message}`);
+    }
+
+    return extractAnthropicText(await response.json());
+  }
+
+  if (provider === "gemini") {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.4 },
+      }),
+    });
+
+    if (!response.ok) {
+      const message = await response.text();
+      throw new Error(`Gemini 请求失败：${response.status} ${message}`);
+    }
+
+    return extractGeminiText(await response.json());
+  }
 
   const response = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
@@ -372,7 +543,7 @@ function renderInterviewStage() {
   card.className = "interview-card";
   meta.className = "interview-meta";
   title.textContent = `Q${index + 1} / ${state.questions.length} · ${getQuestionCategory(index)}`;
-  meta.textContent = state.engine === "openai" ? "OpenAI 实时生成" : "本地模拟";
+  meta.textContent = state.engine === "api" ? `${getProviderLabel()} 实时生成` : "本地模拟";
   body.textContent = question;
   answer.id = "currentAnswer";
   answer.className = "answer-input";
@@ -488,10 +659,11 @@ async function handleFollowup(fromFollowupAnswer = false) {
   const turn = state.turns[state.currentIndex];
   const followupAnswer = fromFollowupAnswer ? saveCurrentFollowupAnswer() : "";
   outputState.textContent = "生成追问中";
+  setProgressStep("followup");
 
   try {
     if (apiKeyInput.value.trim()) {
-      const text = await callOpenAI(buildFollowupPrompt(turn, followupAnswer));
+      const text = await callModel(buildFollowupPrompt(turn, followupAnswer));
       const result = parseJsonText(text);
       turn.followups = turn.followups || [];
       turn.followups.push({
@@ -499,7 +671,7 @@ async function handleFollowup(fromFollowupAnswer = false) {
         answer: "",
         feedback: result.feedback || "",
       });
-      state.engine = "openai";
+      state.engine = "api";
     } else {
       turn.followups = turn.followups || [];
       turn.followups.push({
@@ -531,8 +703,10 @@ function nextQuestion() {
   if (state.currentIndex < state.questions.length - 1) {
     state.currentIndex += 1;
     outputState.textContent = `第 ${state.currentIndex + 1} 题`;
+    setProgressStep("interview");
   } else {
     outputState.textContent = "本轮完成";
+    setProgressStep("followup");
   }
   renderInterviewStage();
   renderHistory();
@@ -544,16 +718,17 @@ async function renderResult() {
   state.currentIndex = 0;
   state.turns = [];
   setBusy(true, "生成中...");
-  outputState.textContent = apiKeyInput.value.trim() ? "调用 OpenAI 中" : "生成本地模拟";
+  outputState.textContent = apiKeyInput.value.trim() ? `调用 ${getProviderLabel()} 中` : "生成本地模拟";
+  setProgressStep("interview");
 
   try {
     if (apiKeyInput.value.trim()) {
-      const text = await callOpenAI(buildInterviewPrompt(materials));
+      const text = await callModel(buildInterviewPrompt(materials));
       const result = parseJsonText(text);
       state.questions = Array.isArray(result.questions) && result.questions.length
         ? result.questions.slice(0, 10)
         : buildLocalQuestions(materials.company, materials.role);
-      state.engine = "openai";
+      state.engine = "api";
       matchScore.textContent = result.matchScore || "已分析";
       duration.textContent = result.duration || (state.round === "HR 面" ? "25 min" : "45 min");
       setAnalysis(Array.isArray(result.analysis) ? result.analysis : ["已基于 JD 和简历生成定制面试问题。"]);
@@ -564,11 +739,11 @@ async function renderResult() {
       duration.textContent = state.round === "HR 面" ? "25 min" : "45 min";
       setAnalysis([
         "未填写 API Key，当前使用本地模拟问题。",
-        "填写 OpenAI API Key 后，会基于 JD、简历和回答实时生成问题与追问。",
+        "填写所选供应商 API Key 后，会基于 JD、简历和回答实时生成问题与追问。",
         "建议提供完整 JD 和简历文本，以获得更贴近目标岗位的模拟面试。",
       ]);
     }
-    outputState.textContent = state.engine === "openai" ? "OpenAI 已生成" : "本地模拟已生成";
+    outputState.textContent = state.engine === "api" ? `${getProviderLabel()} 已生成` : "本地模拟已生成";
   } catch (error) {
     state.questions = buildLocalQuestions(materials.company, materials.role);
     state.engine = "local";
@@ -576,7 +751,7 @@ async function renderResult() {
     matchScore.textContent = "待补充";
     duration.textContent = state.round === "HR 面" ? "25 min" : "45 min";
     setAnalysis([
-      "OpenAI API 调用失败，已切换到本地模拟。",
+      `${getProviderLabel()} API 调用失败，已切换到本地模拟。`,
       error.message,
       "请检查 API Key、模型名称、账户额度和浏览器网络限制。",
     ]);
@@ -601,6 +776,7 @@ function resetAll() {
   state.parsedFiles.jd = "";
   state.parsedFiles.resume = "";
   outputState.textContent = "等待输入";
+  setProgressStep("materials");
   matchScore.textContent = "--";
   questionCount.textContent = "--";
   duration.textContent = "--";
@@ -616,5 +792,7 @@ function resetAll() {
 bindTabs();
 bindSegmented();
 bindFiles();
+bindProviderModels();
+setProgressStep("materials");
 generateButton.addEventListener("click", renderResult);
 document.querySelector("#resetButton").addEventListener("click", resetAll);

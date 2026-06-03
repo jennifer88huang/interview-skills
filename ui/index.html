@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>AI 模拟面试官 · 轻量 UI 原型</title>
-    <link rel="stylesheet" href="./styles.css?v=20260603-resume-file-default" />
+    <link rel="stylesheet" href="./styles.css?v=20260603-provider-progress" />
   </head>
   <body>
     <main class="app-shell">
@@ -17,14 +17,14 @@
           </div>
         </div>
         <div class="status-strip" aria-label="流程状态">
-          <span class="status-dot active"></span>
-          <span>输入材料</span>
-          <span class="status-line"></span>
-          <span class="status-dot"></span>
-          <span>生成面试</span>
-          <span class="status-line"></span>
-          <span class="status-dot"></span>
-          <span>追问演练</span>
+          <span class="status-dot active" data-step-dot="materials"></span>
+          <span data-step-label="materials">输入材料</span>
+          <span class="status-line" data-step-line="interview"></span>
+          <span class="status-dot" data-step-dot="interview"></span>
+          <span data-step-label="interview">生成面试</span>
+          <span class="status-line" data-step-line="followup"></span>
+          <span class="status-dot" data-step-dot="followup"></span>
+          <span data-step-label="followup">追问演练</span>
         </div>
       </header>
 
@@ -74,17 +74,27 @@
           <div class="field-group">
             <span class="field-label">AI 引擎</span>
             <label>
-              OpenAI API Key
-              <input id="apiKeyInput" type="password" placeholder="sk-..." autocomplete="off" />
+              模型供应商
+              <select id="providerSelect">
+                <option value="openai">OpenAI</option>
+                <option value="anthropic">Anthropic Claude</option>
+                <option value="gemini">Google Gemini</option>
+                <option value="deepseek">DeepSeek</option>
+                <option value="openrouter">OpenRouter</option>
+              </select>
             </label>
             <label>
               模型
-              <input id="modelInput" type="text" value="gpt-4.1-mini" />
+              <select id="modelInput"></select>
+            </label>
+            <label>
+              API Key
+              <input id="apiKeyInput" type="password" placeholder="粘贴所选供应商的 API Key" autocomplete="off" />
             </label>
           </div>
 
           <button id="generateButton" class="primary-action" type="button">开始模拟面试</button>
-          <p class="privacy-note">未填写 API Key 时使用本地模拟；填写后直接调用 OpenAI，Key 仅保存在当前浏览器会话。</p>
+          <p class="privacy-note">未填写 API Key 时使用本地模拟；填写后直接调用所选模型供应商，Key 仅保存在当前浏览器会话。</p>
         </aside>
 
         <section class="input-panel" aria-label="材料输入">
@@ -198,6 +208,6 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js"></script>
-    <script src="./app.js?v=20260603-resume-file-default"></script>
+    <script src="./app.js?v=20260603-provider-progress"></script>
   </body>
 </html>

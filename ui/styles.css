@@ -29,6 +29,7 @@ body {
 
 button,
 input,
+select,
 textarea {
   font: inherit;
 }
@@ -120,9 +121,28 @@ h3 {
   background: var(--accent);
 }
 
+.status-dot.done {
+  border-color: var(--accent);
+  background: #ccfbf1;
+}
+
+.status-strip [data-step-label].active {
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.status-strip [data-step-label].done {
+  color: var(--accent);
+  font-weight: 800;
+}
+
 .status-line {
   height: 1px;
   background: var(--line);
+}
+
+.status-line.done {
+  background: var(--accent);
 }
 
 .workspace {
@@ -195,6 +215,7 @@ label,
 
 input[type="text"],
 input[type="url"],
+select,
 textarea {
   width: 100%;
   border: 1px solid var(--line);
@@ -205,7 +226,8 @@ textarea {
 }
 
 input[type="text"],
-input[type="url"] {
+input[type="url"],
+select {
   height: 42px;
   padding: 0 12px;
 }
@@ -218,6 +240,7 @@ textarea {
 }
 
 input:focus,
+select:focus,
 textarea:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 4px var(--focus);
