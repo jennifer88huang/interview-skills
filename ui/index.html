@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>AI 模拟面试官 · 轻量 UI 原型</title>
-    <link rel="stylesheet" href="./styles.css?v=20260603-file-followup" />
+    <link rel="stylesheet" href="./styles.css?v=20260603-resume-file-default" />
   </head>
   <body>
     <main class="app-shell">
@@ -131,18 +131,18 @@
             </div>
 
             <div class="tabs" role="tablist" aria-label="简历输入方式">
-              <button class="selected" type="button" data-tab-target="resume-text">文本</button>
-              <button type="button" data-tab-target="resume-file">文件</button>
+              <button class="selected" type="button" data-tab-target="resume-file">文件</button>
+              <button type="button" data-tab-target="resume-text">文本</button>
             </div>
 
-            <div class="tab-panel active" id="resume-text">
+            <div class="tab-panel" id="resume-text">
               <label>
                 粘贴简历内容
                 <textarea id="resumeText" placeholder="粘贴教育背景、工作经历、项目经历、技术栈等内容"></textarea>
               </label>
             </div>
 
-            <div class="tab-panel" id="resume-file">
+            <div class="tab-panel active" id="resume-file">
               <label class="dropzone">
                 <input id="resumeFile" type="file" accept=".pdf,.doc,.docx,.txt,.md,image/*" />
                 <strong>上传简历文件</strong>
@@ -198,6 +198,6 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js"></script>
-    <script src="./app.js?v=20260603-file-followup"></script>
+    <script src="./app.js?v=20260603-resume-file-default"></script>
   </body>
 </html>
