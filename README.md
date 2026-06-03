@@ -38,7 +38,7 @@
 
 ## News
 
-- **2026-06-01**：新增 `install-skill.sh`，支持终端用户一键运行 `bash install-skill.sh https://github.com/jennifer88huang/interview-skills.git` 完成本地安装，降低使用门槛。
+- **2026-06-01**：新增 `install-skill.sh`，支持一键运行安装，降低使用门槛。
 - **2026-05-28**：新增海外大厂面试支持，覆盖 Google、Meta、Amazon/AWS、Microsoft 等公司。
 - **2026-04-24**：新增 HR 面专项训练、薪资谈判话术和多轮完整面试流程。
 - **2026-04-06**：新增 Skill 初版、PRD、JD 解析、简历解析、公司画像、题目设计和 BEI/STAR 行为面试框架，建立基于 `JD + 简历` 生成专属面试题的核心能力。
