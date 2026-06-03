@@ -483,6 +483,17 @@ textarea:focus {
   margin-bottom: 0;
 }
 
+.followup-stack {
+  display: grid;
+  gap: 6px;
+}
+
+.followup-stack p {
+  padding: 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.62);
+}
+
 @media (max-width: 1180px) {
   .workspace {
     grid-template-columns: 260px minmax(420px, 1fr);

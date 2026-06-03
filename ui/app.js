@@ -4,6 +4,10 @@ const state = {
   currentIndex: 0,
   turns: [],
   engine: "local",
+  parsedFiles: {
+    jd: "",
+    resume: "",
+  },
 };
 
 const companyInput = document.querySelector("#companyInput");
@@ -49,26 +53,87 @@ function bindSegmented() {
   });
 }
 
+function formatFileSize(file) {
+  return file.size < 1024 * 1024
+    ? `${Math.max(1, Math.round(file.size / 1024))} KB`
+    : `${(file.size / 1024 / 1024).toFixed(1)} MB`;
+}
+
+async function parseTextFile(file) {
+  return file.text();
+}
+
+async function parsePdfFile(file) {
+  if (!window.pdfjsLib) {
+    throw new Error("PDF 解析库未加载完成，请刷新页面后重试。");
+  }
+
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  const buffer = await file.arrayBuffer();
+  const pdf = await window.pdfjsLib.getDocument({ data: buffer }).promise;
+  const pages = [];
+
+  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+    const page = await pdf.getPage(pageNumber);
+    const content = await page.getTextContent();
+    pages.push(content.items.map((item) => item.str).join(" "));
+  }
+
+  return pages.join("\n\n");
+}
+
+async function parseDocxFile(file) {
+  if (!window.mammoth) {
+    throw new Error("Word 解析库未加载完成，请刷新页面后重试。");
+  }
+
+  const result = await window.mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
+  return result.value;
+}
+
+async function parseUpload(file) {
+  const name = file.name.toLowerCase();
+  if (name.endsWith(".txt") || name.endsWith(".md")) return parseTextFile(file);
+  if (name.endsWith(".pdf")) return parsePdfFile(file);
+  if (name.endsWith(".docx")) return parseDocxFile(file);
+  if (name.endsWith(".doc")) {
+    throw new Error("暂不支持旧版 .doc，请另存为 .docx 或 PDF 后上传。");
+  }
+  if (file.type.startsWith("image/")) {
+    throw new Error("图片 OCR 暂未接入，请先复制图片中的文字或上传 PDF/Word/TXT。");
+  }
+  throw new Error("暂不支持该文件类型，请上传 PDF、DOCX、TXT 或 Markdown。");
+}
+
+async function handleFileChange(input, meta, targetKey) {
+  const file = input.files[0];
+  if (!file) {
+    state.parsedFiles[targetKey] = "";
+    meta.textContent = "尚未选择文件";
+    return;
+  }
+
+  meta.textContent = `${file.name} · ${formatFileSize(file)} · 解析中...`;
+  try {
+    const text = (await parseUpload(file)).trim();
+    if (!text) throw new Error("没有解析到可用文本。");
+    state.parsedFiles[targetKey] = text;
+    meta.textContent = `${file.name} · ${formatFileSize(file)} · 已解析 ${text.length} 字`;
+  } catch (error) {
+    state.parsedFiles[targetKey] = "";
+    meta.textContent = `${file.name} · ${formatFileSize(file)} · ${error.message}`;
+  }
+}
+
 function bindFiles() {
   [
-    ["#jdFile", "#jdFileMeta"],
-    ["#resumeFile", "#resumeFileMeta"],
-  ].forEach(([inputSelector, metaSelector]) => {
+    ["#jdFile", "#jdFileMeta", "jd"],
+    ["#resumeFile", "#resumeFileMeta", "resume"],
+  ].forEach(([inputSelector, metaSelector, targetKey]) => {
     const input = document.querySelector(inputSelector);
     const meta = document.querySelector(metaSelector);
 
-    input.addEventListener("change", () => {
-      const file = input.files[0];
-      if (!file) {
-        meta.textContent = "尚未选择文件";
-        return;
-      }
-
-      const size = file.size < 1024 * 1024
-        ? `${Math.max(1, Math.round(file.size / 1024))} KB`
-        : `${(file.size / 1024 / 1024).toFixed(1)} MB`;
-      meta.textContent = `${file.name} · ${size}`;
-    });
+    input.addEventListener("change", () => handleFileChange(input, meta, targetKey));
   });
 }
 
@@ -82,14 +147,14 @@ function getMaterials() {
     company: companyInput.value.trim() || "目标公司",
     role: roleInput.value.trim() || "目标岗位",
     round: state.round,
-    jd: jdText.value.trim() || jdLink.value.trim() || "未提供完整 JD",
-    resume: resumeText.value.trim() || "未提供完整简历",
+    jd: jdText.value.trim() || state.parsedFiles.jd || jdLink.value.trim() || "未提供完整 JD",
+    resume: resumeText.value.trim() || state.parsedFiles.resume || "未提供完整简历",
   };
 }
 
 function getMaterialLevel() {
-  const jdHasContent = jdLink.value.trim() || jdText.value.trim() || document.querySelector("#jdFile").files.length;
-  const resumeHasContent = resumeText.value.trim() || document.querySelector("#resumeFile").files.length;
+  const jdHasContent = jdLink.value.trim() || jdText.value.trim() || state.parsedFiles.jd;
+  const resumeHasContent = resumeText.value.trim() || state.parsedFiles.resume;
 
   if (jdHasContent && resumeHasContent) return "complete";
   if (jdHasContent || resumeHasContent) return "partial";
@@ -132,7 +197,7 @@ function getQuestionCategory(index) {
   return "行为/收尾";
 }
 
-function buildLocalFollowup(question, answer, index) {
+function buildLocalFollowup(question, answer, index, previousFollowup = "") {
   const { company, role } = getMaterials();
   const cleanAnswer = answer.trim();
   const category = getQuestionCategory(index);
@@ -154,7 +219,9 @@ function buildLocalFollowup(question, answer, index) {
   }
 
   if (category === "项目深挖") {
-    return `继续深挖这个项目：当时最大的约束是什么？你放弃过哪些方案？如果在 ${company} ${role} 的场景重做一次，你会改哪一个关键决策？`;
+    return previousFollowup
+      ? `继续追问：你刚才补充的内容里，哪一个判断最容易被数据或事实挑战？如果面试官要求你现场证明，你会拿出什么证据？`
+      : `继续深挖这个项目：当时最大的约束是什么？你放弃过哪些方案？如果在 ${company} ${role} 的场景重做一次，你会改哪一个关键决策？`;
   }
 
   if (category === "行为/收尾") {
@@ -237,11 +304,15 @@ JD：${materials.jd}
 `.trim();
 }
 
-function buildFollowupPrompt(turn) {
+function buildFollowupPrompt(turn, followupAnswer = "") {
   const materials = getMaterials();
   const transcript = state.turns.map((item, index) => (
-    `Q${index + 1}: ${item.question}\n回答: ${item.answer || "未回答"}\n追问: ${item.followup || "无"}`
+    `Q${index + 1}: ${item.question}
+主问题回答: ${item.answer || "未回答"}
+追问记录:
+${(item.followups || []).map((followup, followupIndex) => `- 追问${followupIndex + 1}: ${followup.question}\n  追问回答: ${followup.answer || "未回答"}\n  反馈: ${followup.feedback || "无"}`).join("\n") || "无"}`
   )).join("\n\n");
+  const latestFollowup = (turn.followups || []).at(-1);
 
   return `
 你是一位中文模拟面试官。请基于候选人的回答继续追问，并给出简短反馈。
@@ -254,6 +325,8 @@ JD：${materials.jd}
 
 当前问题：${turn.question}
 候选人回答：${turn.answer}
+上一轮追问：${latestFollowup ? latestFollowup.question : "无"}
+候选人对上一轮追问的回答：${followupAnswer || "无"}
 
 历史记录：
 ${transcript || "暂无"}
@@ -286,6 +359,7 @@ function renderInterviewStage() {
   const index = state.currentIndex;
   const question = state.questions[index];
   const existingTurn = state.turns[index] || {};
+  const latestFollowup = (existingTurn.followups || []).at(-1);
   const card = document.createElement("article");
   const meta = document.createElement("div");
   const title = document.createElement("strong");
@@ -315,12 +389,33 @@ function renderInterviewStage() {
   actions.append(followupButton, nextButton);
   card.append(meta, title, body, answer, actions);
 
-  if (existingTurn.followup) {
+  if (latestFollowup) {
     const followup = document.createElement("div");
+    const followupTitle = document.createElement("strong");
+    const followupQuestion = document.createElement("p");
+    const followupAnswer = document.createElement("textarea");
+    const followupActions = document.createElement("div");
+    const continueButton = document.createElement("button");
+
     followup.className = "inline-followup";
-    followup.textContent = existingTurn.feedback
-      ? `${existingTurn.followup} 反馈：${existingTurn.feedback}`
-      : existingTurn.followup;
+    followupTitle.textContent = `追问 ${existingTurn.followups.length}`;
+    followupQuestion.textContent = latestFollowup.question;
+    followupAnswer.id = "currentFollowupAnswer";
+    followupAnswer.className = "answer-input";
+    followupAnswer.placeholder = "输入你对追问的回答，然后点击继续追问";
+    followupAnswer.value = latestFollowup.answer || "";
+    followupActions.className = "question-actions";
+    continueButton.type = "button";
+    continueButton.textContent = "继续追问";
+    continueButton.addEventListener("click", () => handleFollowup(true));
+    followupActions.append(continueButton);
+    followup.append(followupTitle, followupQuestion, followupAnswer, followupActions);
+
+    if (latestFollowup.feedback) {
+      const feedback = document.createElement("p");
+      feedback.textContent = `反馈：${latestFollowup.feedback}`;
+      followup.append(feedback);
+    }
     card.append(followup);
   }
 
@@ -339,20 +434,25 @@ function renderHistory() {
     const title = document.createElement("strong");
     const question = document.createElement("p");
     const answer = document.createElement("p");
-    const followup = document.createElement("p");
+    const followups = document.createElement("div");
 
     entry.className = "followup-entry";
     title.textContent = `Q${index + 1}`;
     question.textContent = item.question;
     answer.textContent = item.answer ? `回答：${item.answer}` : "回答：未填写";
-    followup.textContent = item.followup ? `追问：${item.followup}` : "追问：待生成";
-
-    entry.append(title, question, answer, followup);
-    if (item.feedback) {
-      const feedback = document.createElement("p");
-      feedback.textContent = `反馈：${item.feedback}`;
-      entry.append(feedback);
+    followups.className = "followup-stack";
+    (item.followups || []).forEach((followup, followupIndex) => {
+      const node = document.createElement("p");
+      node.textContent = `追问${followupIndex + 1}：${followup.question}${followup.answer ? ` / 回答：${followup.answer}` : ""}${followup.feedback ? ` / 反馈：${followup.feedback}` : ""}`;
+      followups.append(node);
+    });
+    if (!(item.followups || []).length) {
+      const node = document.createElement("p");
+      node.textContent = "追问：待生成";
+      followups.append(node);
     }
+
+    entry.append(title, question, answer, followups);
     followupBox.append(entry);
   });
 }
@@ -364,39 +464,57 @@ function saveCurrentTurn(patch = {}) {
   state.turns[state.currentIndex] = {
     question,
     answer: answerNode ? answerNode.value.trim() : existing.answer || "",
-    followup: existing.followup || "",
-    feedback: existing.feedback || "",
+    followups: existing.followups || [],
     ...patch,
   };
 }
 
-async function handleFollowup() {
+function saveCurrentFollowupAnswer() {
+  const answerNode = document.querySelector("#currentFollowupAnswer");
+  if (!answerNode) return "";
+
+  const turn = state.turns[state.currentIndex];
+  const latestFollowup = (turn.followups || []).at(-1);
+  if (!latestFollowup) return "";
+
+  latestFollowup.answer = answerNode.value.trim();
+  return latestFollowup.answer;
+}
+
+async function handleFollowup(fromFollowupAnswer = false) {
   if (!state.questions.length) return;
 
   saveCurrentTurn();
   const turn = state.turns[state.currentIndex];
+  const followupAnswer = fromFollowupAnswer ? saveCurrentFollowupAnswer() : "";
   outputState.textContent = "生成追问中";
 
   try {
     if (apiKeyInput.value.trim()) {
-      const text = await callOpenAI(buildFollowupPrompt(turn));
+      const text = await callOpenAI(buildFollowupPrompt(turn, followupAnswer));
       const result = parseJsonText(text);
-      saveCurrentTurn({
-        followup: result.followup || "请继续补充关键细节。",
+      turn.followups = turn.followups || [];
+      turn.followups.push({
+        question: result.followup || "请继续补充关键细节。",
+        answer: "",
         feedback: result.feedback || "",
       });
       state.engine = "openai";
     } else {
-      saveCurrentTurn({
-        followup: buildLocalFollowup(turn.question, turn.answer, state.currentIndex),
+      turn.followups = turn.followups || [];
+      turn.followups.push({
+        question: buildLocalFollowup(turn.question, fromFollowupAnswer ? followupAnswer : turn.answer, state.currentIndex, fromFollowupAnswer ? turn.followups.at(-1)?.question : ""),
+        answer: "",
         feedback: "本地模拟反馈：建议补充量化结果、个人贡献和复盘。",
       });
       state.engine = "local";
     }
     outputState.textContent = "已生成追问";
   } catch (error) {
-    saveCurrentTurn({
-      followup: buildLocalFollowup(turn.question, turn.answer, state.currentIndex),
+    turn.followups = turn.followups || [];
+    turn.followups.push({
+      question: buildLocalFollowup(turn.question, fromFollowupAnswer ? followupAnswer : turn.answer, state.currentIndex, fromFollowupAnswer ? turn.followups.at(-1)?.question : ""),
+      answer: "",
       feedback: `API 调用失败，已使用本地模拟。${error.message}`,
     });
     outputState.textContent = "API 失败，已兜底";
@@ -409,6 +527,7 @@ async function handleFollowup() {
 function nextQuestion() {
   if (!state.questions.length) return;
   saveCurrentTurn();
+  saveCurrentFollowupAnswer();
   if (state.currentIndex < state.questions.length - 1) {
     state.currentIndex += 1;
     outputState.textContent = `第 ${state.currentIndex + 1} 题`;
@@ -479,6 +598,8 @@ function resetAll() {
   document.querySelector("#resumeFile").value = "";
   document.querySelector("#jdFileMeta").textContent = "尚未选择文件";
   document.querySelector("#resumeFileMeta").textContent = "尚未选择文件";
+  state.parsedFiles.jd = "";
+  state.parsedFiles.resume = "";
   outputState.textContent = "等待输入";
   matchScore.textContent = "--";
   questionCount.textContent = "--";
