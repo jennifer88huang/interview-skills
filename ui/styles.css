@@ -145,6 +145,23 @@ h3 {
   background: var(--accent);
 }
 
+.language-toggle {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.language-toggle:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 .workspace {
   display: grid;
   grid-template-columns: 280px minmax(420px, 1fr) 380px;

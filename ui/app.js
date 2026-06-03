@@ -1,4 +1,5 @@
 const state = {
+  lang: localStorage.getItem("interviewSkillsLang") || (navigator.language.toLowerCase().startsWith("zh") ? "zh" : "en"),
   round: "一面",
   questions: [],
   currentIndex: 0,
@@ -30,6 +31,7 @@ const analysisList = document.querySelector("#analysisList");
 const interviewStage = document.querySelector("#interviewStage");
 const followupBox = document.querySelector("#followupBox");
 const generateButton = document.querySelector("#generateButton");
+const languageToggle = document.querySelector("#languageToggle");
 const progressSteps = ["materials", "interview", "followup"];
 const modelCatalog = {
   openai: [
@@ -128,6 +130,106 @@ const providerConfig = {
   openrouter: { type: "openai-compatible", endpoint: "https://openrouter.ai/api/v1/chat/completions" },
   other: { type: "openai-compatible", needsEndpoint: true, needsCustomModel: true },
 };
+const staticText = {
+  "AI 模拟面试官": "AI Mock Interviewer",
+  "输入材料": "Input Materials",
+  "生成面试": "Generate Interview",
+  "追问演练": "Follow-up Practice",
+  "面试设置": "Interview Setup",
+  "目标公司": "Target Company",
+  "目标岗位": "Target Role",
+  "面试轮次": "Interview Round",
+  "一面": "Round 1",
+  "二面": "Round 2",
+  "三面": "Round 3",
+  "HR 面": "HR Round",
+  "训练模式": "Training Mode",
+  "生成 10 问": "Generate 10 Questions",
+  "自动追问": "Auto Follow-up",
+  "谈薪话术": "Salary Practice",
+  "AI 引擎": "AI Engine",
+  "模型供应商": "Model Provider",
+  "模型": "Model",
+  "自定义模型名": "Custom Model Name",
+  "API 地址": "API Endpoint",
+  "API Key": "API Key",
+  "开始模拟面试": "Start Mock Interview",
+  "未填写 API Key 时使用本地模拟；填写后直接调用所选模型供应商，Key 仅保存在当前浏览器会话。": "Without an API key, the page uses local simulation. With a key, it calls the selected model provider directly. The key stays only in this browser session.",
+  "JD 内容": "JD Content",
+  "链接 / 文本 / 图片 / Word / PDF": "Link / Text / Image / Word / PDF",
+  "链接": "Link",
+  "文本": "Text",
+  "文件": "File",
+  "JD 链接": "JD Link",
+  "粘贴 JD 原文": "Paste JD Text",
+  "上传 JD 文件": "Upload JD File",
+  "支持 PDF、Word、图片、TXT、Markdown": "Supports PDF, Word, images, TXT, Markdown",
+  "简历内容": "Resume Content",
+  "文本 / 图片 / Word / PDF": "Text / Image / Word / PDF",
+  "粘贴简历内容": "Paste Resume Text",
+  "上传简历文件": "Upload Resume File",
+  "模拟结果": "Results",
+  "等待输入": "Waiting",
+  "JD 匹配度": "JD Match",
+  "题目数量": "Questions",
+  "预计时长": "Duration",
+  "匹配度分析": "Fit Analysis",
+  "输入 JD 和简历后生成强匹配、需补强和简历弱点。": "Enter a JD and resume to generate strengths, gaps, and resume risks.",
+  "模拟面试": "Mock Interview",
+  "点击「开始模拟面试」后，这里会展示按公司风格生成的问题。": "Click Start Mock Interview to generate company-style questions here.",
+  "面试记录": "Interview Log",
+  "回答任意问题后，AI 面试官会基于你的回答继续深挖。": "After you answer, the AI interviewer will dig deeper based on your response.",
+  "Others / 自定义": "Others / Custom",
+  "自定义模型": "Custom Model",
+};
+const placeholderText = {
+  companyInput: ["例如：阿里巴巴 / 字节跳动 / Google", "e.g. Alibaba / ByteDance / Google"],
+  roleInput: ["例如：后端工程师 / 产品经理 / 数据分析师", "e.g. Backend Engineer / Product Manager / Data Analyst"],
+  apiKeyInput: ["粘贴所选供应商的 API Key", "Paste the selected provider API key"],
+  customModelInput: ["例如：provider/model-name", "e.g. provider/model-name"],
+  customEndpointInput: ["https://.../v1/chat/completions", "https://.../v1/chat/completions"],
+  jdLink: ["https://...", "https://..."],
+  jdText: ["粘贴岗位职责、任职要求、加分项等内容", "Paste responsibilities, requirements, nice-to-haves, and context"],
+  resumeText: ["粘贴教育背景、工作经历、项目经历、技术栈等内容", "Paste education, work experience, projects, skills, and achievements"],
+};
+const reverseStaticText = Object.fromEntries(Object.entries(staticText).map(([zh, en]) => [en, zh]));
+
+function localize(zh, en) {
+  return state.lang === "zh" ? zh : en;
+}
+
+function translateStaticText(targetLang) {
+  const map = targetLang === "en" ? staticText : reverseStaticText;
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  const nodes = [];
+
+  while (walker.nextNode()) {
+    nodes.push(walker.currentNode);
+  }
+
+  nodes.forEach((node) => {
+    const text = node.nodeValue.trim();
+    if (!text || !map[text]) return;
+    node.nodeValue = node.nodeValue.replace(text, map[text]);
+  });
+}
+
+function applyLanguage(targetLang = state.lang) {
+  state.lang = targetLang;
+  localStorage.setItem("interviewSkillsLang", state.lang);
+  document.documentElement.lang = state.lang === "zh" ? "zh-CN" : "en";
+  document.title = localize("AI 模拟面试官 · 轻量 UI 原型", "AI Mock Interviewer · Lightweight UI");
+  languageToggle.textContent = state.lang === "zh" ? "English" : "中文";
+  translateStaticText(state.lang);
+
+  Object.entries(placeholderText).forEach(([id, values]) => {
+    const node = document.querySelector(`#${id}`);
+    if (node) node.placeholder = state.lang === "zh" ? values[0] : values[1];
+  });
+
+  renderInterviewStage();
+  renderHistory();
+}
 
 function setProgressStep(step) {
   const activeIndex = progressSteps.indexOf(step);
@@ -155,13 +257,13 @@ function bindProviderModels() {
   const renderModels = () => {
     const provider = providerSelect.value;
     const config = providerConfig[provider] || {};
-    modelInput.replaceChildren();
-    modelCatalog[provider].forEach(([value, label]) => {
-      const option = document.createElement("option");
-      option.value = value;
-      option.textContent = label;
-      modelInput.append(option);
-    });
+  modelInput.replaceChildren();
+  modelCatalog[provider].forEach(([value, label]) => {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = label === "自定义模型" ? localize("自定义模型", "Custom Model") : label;
+    modelInput.append(option);
+  });
     customModelField.classList.toggle("hidden", !config.needsCustomModel);
     customEndpointField.classList.toggle("hidden", !config.needsEndpoint);
   };
@@ -172,6 +274,17 @@ function bindProviderModels() {
 
 function getProviderLabel() {
   return providerLabels[providerSelect.value] || "所选模型";
+}
+
+function getRoundLabel() {
+  const labels = {
+    "一面": ["一面", "Round 1"],
+    "二面": ["二面", "Round 2"],
+    "三面": ["三面", "Round 3"],
+    "HR 面": ["HR 面", "HR Round"],
+  };
+  const [zh, en] = labels[state.round] || [state.round, state.round];
+  return localize(zh, en);
 }
 
 function getSelectedModel() {
@@ -218,7 +331,7 @@ async function parseTextFile(file) {
 
 async function parsePdfFile(file) {
   if (!window.pdfjsLib) {
-    throw new Error("PDF 解析库未加载完成，请刷新页面后重试。");
+    throw new Error(localize("PDF 解析库未加载完成，请刷新页面后重试。", "PDF parser is still loading. Please refresh and try again."));
   }
 
   window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
@@ -237,7 +350,7 @@ async function parsePdfFile(file) {
 
 async function parseDocxFile(file) {
   if (!window.mammoth) {
-    throw new Error("Word 解析库未加载完成，请刷新页面后重试。");
+    throw new Error(localize("Word 解析库未加载完成，请刷新页面后重试。", "Word parser is still loading. Please refresh and try again."));
   }
 
   const result = await window.mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
@@ -250,28 +363,28 @@ async function parseUpload(file) {
   if (name.endsWith(".pdf")) return parsePdfFile(file);
   if (name.endsWith(".docx")) return parseDocxFile(file);
   if (name.endsWith(".doc")) {
-    throw new Error("暂不支持旧版 .doc，请另存为 .docx 或 PDF 后上传。");
+    throw new Error(localize("暂不支持旧版 .doc，请另存为 .docx 或 PDF 后上传。", "Legacy .doc is not supported. Please save it as .docx or PDF."));
   }
   if (file.type.startsWith("image/")) {
-    throw new Error("图片 OCR 暂未接入，请先复制图片中的文字或上传 PDF/Word/TXT。");
+    throw new Error(localize("图片 OCR 暂未接入，请先复制图片中的文字或上传 PDF/Word/TXT。", "Image OCR is not connected yet. Please paste the text or upload PDF/Word/TXT."));
   }
-  throw new Error("暂不支持该文件类型，请上传 PDF、DOCX、TXT 或 Markdown。");
+  throw new Error(localize("暂不支持该文件类型，请上传 PDF、DOCX、TXT 或 Markdown。", "This file type is not supported. Please upload PDF, DOCX, TXT, or Markdown."));
 }
 
 async function handleFileChange(input, meta, targetKey) {
   const file = input.files[0];
   if (!file) {
     state.parsedFiles[targetKey] = "";
-    meta.textContent = "尚未选择文件";
+    meta.textContent = localize("尚未选择文件", "No file selected");
     return;
   }
 
-  meta.textContent = `${file.name} · ${formatFileSize(file)} · 解析中...`;
+  meta.textContent = `${file.name} · ${formatFileSize(file)} · ${localize("解析中...", "Parsing...")}`;
   try {
     const text = (await parseUpload(file)).trim();
-    if (!text) throw new Error("没有解析到可用文本。");
+    if (!text) throw new Error(localize("没有解析到可用文本。", "No usable text was extracted."));
     state.parsedFiles[targetKey] = text;
-    meta.textContent = `${file.name} · ${formatFileSize(file)} · 已解析 ${text.length} 字`;
+    meta.textContent = `${file.name} · ${formatFileSize(file)} · ${localize(`已解析 ${text.length} 字`, `Parsed ${text.length} characters`)}`;
   } catch (error) {
     state.parsedFiles[targetKey] = "";
     meta.textContent = `${file.name} · ${formatFileSize(file)} · ${error.message}`;
@@ -292,16 +405,16 @@ function bindFiles() {
 
 function setBusy(isBusy, label = "处理中...") {
   generateButton.disabled = isBusy;
-  generateButton.textContent = isBusy ? label : "开始模拟面试";
+  generateButton.textContent = isBusy ? label : localize("开始模拟面试", "Start Mock Interview");
 }
 
 function getMaterials() {
   return {
     company: companyInput.value.trim() || "目标公司",
     role: roleInput.value.trim() || "目标岗位",
-    round: state.round,
-    jd: jdText.value.trim() || state.parsedFiles.jd || jdLink.value.trim() || "未提供完整 JD",
-    resume: resumeText.value.trim() || state.parsedFiles.resume || "未提供完整简历",
+    round: getRoundLabel(),
+    jd: jdText.value.trim() || state.parsedFiles.jd || jdLink.value.trim() || localize("未提供完整 JD", "No complete JD provided"),
+    resume: resumeText.value.trim() || state.parsedFiles.resume || localize("未提供完整简历", "No complete resume provided"),
   };
 }
 
@@ -316,7 +429,7 @@ function getMaterialLevel() {
 
 function buildLocalQuestions(company, role) {
   if (state.round === "HR 面") {
-    return [
+    return state.lang === "zh" ? [
       "你为什么考虑这个机会？真实动机是什么？",
       "离开上一家公司或当前岗位的核心原因是什么？",
       "你如何看待职业稳定性和成长速度之间的取舍？",
@@ -327,10 +440,21 @@ function buildLocalQuestions(company, role) {
       "如果同时拿到多个 offer，你会如何比较？",
       "你的 3 年职业规划是什么？",
       "你还有哪些风险点希望提前和公司沟通？",
+    ] : [
+      "Why are you considering this opportunity? What is your real motivation?",
+      "What is the core reason for leaving your current or previous role?",
+      "How do you think about the tradeoff between career stability and growth speed?",
+      "If the compensation is below your expectation, what factors would guide your decision?",
+      "What type of person has been hardest for you to work with, and how did you handle it?",
+      "What management style helps you perform best? What team environment hurts your performance?",
+      "Tell me about a time you did not get the result you wanted. What did you learn?",
+      "If you receive multiple offers, how will you compare them?",
+      "What is your three-year career plan?",
+      "What risks or concerns would you like to discuss with the company upfront?",
     ];
   }
 
-  return [
+  return state.lang === "zh" ? [
     `请结合最近一个项目做 2 分钟自我介绍，并说明为什么匹配 ${company} ${role}。`,
     "JD 中最核心的硬技能要求是什么？请选一个你最熟的点讲到底层原理。",
     "你简历里最有代表性的项目，最大技术或业务挑战是什么？你具体负责哪一部分？",
@@ -341,13 +465,24 @@ function buildLocalQuestions(company, role) {
     `${company} 这类公司通常重视结果和 owner 意识，请讲一个你主动补位的案例。`,
     "如果本轮面试只让你强调一个优势，你会选择哪一个？为什么？",
     "你有什么想反问面试官的问题？请围绕团队目标、岗位挑战和成长空间组织。",
+  ] : [
+    `Please give a two-minute self-introduction using a recent project, and explain why you fit ${company} ${role}.`,
+    "What is the most important hard-skill requirement in the JD? Pick one you know well and explain the fundamentals.",
+    "Which project on your resume is the most representative? What was the biggest technical or business challenge, and what exactly did you own?",
+    "If the interviewer questions your project metrics or impact, how would you prove the result is reliable?",
+    `Design a typical system, workflow, or business solution related to ${role}, and explain the key tradeoffs.`,
+    "If you discover after joining that one required JD skill is weak, how would you close the gap in 30 days?",
+    "Tell me about a cross-functional conflict. How did you drive alignment?",
+    `${company}-style teams often value ownership and outcomes. Tell me about a time you proactively filled a gap.`,
+    "If this interview allowed you to emphasize only one strength, what would you choose and why?",
+    "What questions would you ask the interviewer about team goals, role challenges, and growth opportunities?",
   ];
 }
 
 function getQuestionCategory(index) {
-  if (index < 4) return "专业/基础";
-  if (index < 7) return "项目深挖";
-  return "行为/收尾";
+  if (index < 4) return localize("专业/基础", "Core Skills");
+  if (index < 7) return localize("项目深挖", "Project Deep Dive");
+  return localize("行为/收尾", "Behavioral / Wrap-up");
 }
 
 function buildLocalFollowup(question, answer, index, previousFollowup = "") {
@@ -356,32 +491,35 @@ function buildLocalFollowup(question, answer, index, previousFollowup = "") {
   const category = getQuestionCategory(index);
 
   if (!cleanAnswer) {
-    return "请先输入你的回答，再继续追问。我会重点看你的职责边界、关键动作、结果证据和复盘深度。";
+    return localize("请先输入你的回答，再继续追问。我会重点看你的职责边界、关键动作、结果证据和复盘深度。", "Please enter your answer first. I will focus on your ownership, key actions, evidence, and reflection depth.");
   }
 
   if (cleanAnswer.length < 40) {
-    return `你的回答还比较短。请继续补充：你具体负责什么、为什么这么做、结果如何量化，以及它和 ${company} ${role} 的要求有什么对应关系？`;
+    return localize(
+      `你的回答还比较短。请继续补充：你具体负责什么、为什么这么做、结果如何量化，以及它和 ${company} ${role} 的要求有什么对应关系？`,
+      `Your answer is still brief. Please add what you personally owned, why you chose that approach, how the result was measured, and how it maps to ${company} ${role}.`,
+    );
   }
 
   if (/我们|团队|大家/.test(cleanAnswer) && !/我/.test(cleanAnswer)) {
-    return "你用了较多团队视角。请切到个人贡献：哪一部分是你独立负责的？关键决策是谁做的？如果没有你，结果会有什么差异？";
+    return localize("你用了较多团队视角。请切到个人贡献：哪一部分是你独立负责的？关键决策是谁做的？如果没有你，结果会有什么差异？", "You used mostly team-level language. Shift to your personal contribution: what did you own, who made the key decisions, and what would have changed without you?");
   }
 
   if (!/[0-9一二三四五六七八九十百千万%]/.test(cleanAnswer)) {
-    return "你的回答缺少结果证据。请补充 1-2 个可验证指标，例如规模、周期、转化率、成本、效率、错误率或业务影响。";
+    return localize("你的回答缺少结果证据。请补充 1-2 个可验证指标，例如规模、周期、转化率、成本、效率、错误率或业务影响。", "Your answer lacks evidence. Add one or two verifiable metrics such as scale, timeline, conversion, cost, efficiency, error rate, or business impact.");
   }
 
   if (category === "项目深挖") {
     return previousFollowup
-      ? `继续追问：你刚才补充的内容里，哪一个判断最容易被数据或事实挑战？如果面试官要求你现场证明，你会拿出什么证据？`
-      : `继续深挖这个项目：当时最大的约束是什么？你放弃过哪些方案？如果在 ${company} ${role} 的场景重做一次，你会改哪一个关键决策？`;
+      ? localize("继续追问：你刚才补充的内容里，哪一个判断最容易被数据或事实挑战？如果面试官要求你现场证明，你会拿出什么证据？", "Follow-up: Which claim in your added answer is most vulnerable to a data or fact challenge? What evidence would you provide on the spot?")
+      : localize(`继续深挖这个项目：当时最大的约束是什么？你放弃过哪些方案？如果在 ${company} ${role} 的场景重做一次，你会改哪一个关键决策？`, `Let's go deeper: what was the biggest constraint, which options did you reject, and what key decision would you change if you redid it for ${company} ${role}?`);
   }
 
   if (category === "行为/收尾") {
-    return "我追问一个行为细节：这个选择背后的真实动机是什么？当时有没有利益冲突或压力？你现在复盘，最想修正的一个动作是什么？";
+    return localize("我追问一个行为细节：这个选择背后的真实动机是什么？当时有没有利益冲突或压力？你现在复盘，最想修正的一个动作是什么？", "Behavioral follow-up: what was the real motivation behind that choice, what pressure or conflict existed, and what would you change in hindsight?");
   }
 
-  return "请进一步讲清楚底层逻辑：这个结论依赖哪些前提？如果面试官挑战其中一个前提，你会用什么事实或案例支撑？";
+  return localize("请进一步讲清楚底层逻辑：这个结论依赖哪些前提？如果面试官挑战其中一个前提，你会用什么事实或案例支撑？", "Explain the underlying logic: what assumptions does your conclusion rely on, and what facts or examples would support it if challenged?");
 }
 
 function extractResponseText(data) {
@@ -527,6 +665,30 @@ async function callModel(prompt) {
 }
 
 function buildInterviewPrompt(materials) {
+  if (state.lang === "en") {
+    return `
+You are a strict but constructive mock interviewer. Generate a ready-to-run interview based on the JD and resume.
+
+Company: ${materials.company}
+Role: ${materials.role}
+Round: ${materials.round}
+JD: ${materials.jd}
+Resume: ${materials.resume}
+
+Return JSON only, no Markdown. Format:
+{
+  "matchScore": "78%",
+  "duration": "45 min",
+  "analysis": ["Strong fit...", "Risk...", "Improvement suggestion..."],
+  "questions": ["Question 1", "Question 2", "...10 questions total"]
+}
+Requirements:
+- questions must contain 10 English questions.
+- Questions must be tailored to the JD and resume.
+- Include at least 4 project deep-dive questions, at least 2 behavioral questions, and 1 final reverse-question preparation item.
+`.trim();
+  }
+
   return `
 你是一位严格但有建设性的中文模拟面试官。请基于 JD 和简历生成一轮可直接开始的模拟面试。
 
@@ -553,12 +715,43 @@ JD：${materials.jd}
 function buildFollowupPrompt(turn, followupAnswer = "") {
   const materials = getMaterials();
   const transcript = state.turns.map((item, index) => (
-    `Q${index + 1}: ${item.question}
+    state.lang === "zh"
+      ? `Q${index + 1}: ${item.question}
 主问题回答: ${item.answer || "未回答"}
 追问记录:
 ${(item.followups || []).map((followup, followupIndex) => `- 追问${followupIndex + 1}: ${followup.question}\n  追问回答: ${followup.answer || "未回答"}\n  反馈: ${followup.feedback || "无"}`).join("\n") || "无"}`
+      : `Q${index + 1}: ${item.question}
+Main answer: ${item.answer || "Not answered"}
+Follow-up history:
+${(item.followups || []).map((followup, followupIndex) => `- Follow-up ${followupIndex + 1}: ${followup.question}\n  Follow-up answer: ${followup.answer || "Not answered"}\n  Feedback: ${followup.feedback || "None"}`).join("\n") || "None"}`
   )).join("\n\n");
   const latestFollowup = (turn.followups || []).at(-1);
+
+  if (state.lang === "en") {
+    return `
+You are an English-speaking mock interviewer. Continue probing based on the candidate's answer and provide brief feedback.
+
+Company: ${materials.company}
+Role: ${materials.role}
+Round: ${materials.round}
+JD: ${materials.jd}
+Resume: ${materials.resume}
+
+Current question: ${turn.question}
+Candidate answer: ${turn.answer}
+Previous follow-up: ${latestFollowup ? latestFollowup.question : "None"}
+Candidate answer to previous follow-up: ${followupAnswer || "None"}
+
+Transcript:
+${transcript || "None"}
+
+Return JSON only, no Markdown. Format:
+{
+  "followup": "A specific, sharp follow-up question that probes a gap or detail in the answer",
+  "feedback": "Feedback under 80 words, with one strength and one improvement point"
+}
+`.trim();
+  }
 
   return `
 你是一位中文模拟面试官。请基于候选人的回答继续追问，并给出简短反馈。
@@ -598,7 +791,7 @@ function renderInterviewStage() {
   interviewStage.replaceChildren();
 
   if (!state.questions.length) {
-    interviewStage.innerHTML = '<p class="empty-state">点击「开始模拟面试」后，这里会展示按公司风格生成的问题。</p>';
+    interviewStage.innerHTML = `<p class="empty-state">${localize("点击「开始模拟面试」后，这里会展示按公司风格生成的问题。", "Click Start Mock Interview to generate company-style questions here.")}</p>`;
     return;
   }
 
@@ -622,14 +815,14 @@ function renderInterviewStage() {
   body.textContent = question;
   answer.id = "currentAnswer";
   answer.className = "answer-input";
-  answer.placeholder = "像真实面试一样输入你的回答，然后点击生成追问";
+  answer.placeholder = localize("像真实面试一样输入你的回答，然后点击生成追问", "Answer as you would in a real interview, then generate a follow-up");
   answer.value = existingTurn.answer || "";
   actions.className = "question-actions";
   followupButton.type = "button";
-  followupButton.textContent = "生成追问";
+  followupButton.textContent = localize("生成追问", "Generate Follow-up");
   followupButton.addEventListener("click", () => handleFollowup());
   nextButton.type = "button";
-  nextButton.textContent = index === state.questions.length - 1 ? "完成本轮" : "下一题";
+  nextButton.textContent = index === state.questions.length - 1 ? localize("完成本轮", "Finish Round") : localize("下一题", "Next Question");
   nextButton.addEventListener("click", nextQuestion);
 
   actions.append(followupButton, nextButton);
@@ -644,22 +837,22 @@ function renderInterviewStage() {
     const continueButton = document.createElement("button");
 
     followup.className = "inline-followup";
-    followupTitle.textContent = `追问 ${existingTurn.followups.length}`;
+    followupTitle.textContent = `${localize("追问", "Follow-up")} ${existingTurn.followups.length}`;
     followupQuestion.textContent = latestFollowup.question;
     followupAnswer.id = "currentFollowupAnswer";
     followupAnswer.className = "answer-input";
-    followupAnswer.placeholder = "输入你对追问的回答，然后点击继续追问";
+    followupAnswer.placeholder = localize("输入你对追问的回答，然后点击继续追问", "Answer this follow-up, then continue probing");
     followupAnswer.value = latestFollowup.answer || "";
     followupActions.className = "question-actions";
     continueButton.type = "button";
-    continueButton.textContent = "继续追问";
+    continueButton.textContent = localize("继续追问", "Continue Follow-up");
     continueButton.addEventListener("click", () => handleFollowup(true));
     followupActions.append(continueButton);
     followup.append(followupTitle, followupQuestion, followupAnswer, followupActions);
 
     if (latestFollowup.feedback) {
       const feedback = document.createElement("p");
-      feedback.textContent = `反馈：${latestFollowup.feedback}`;
+      feedback.textContent = `${localize("反馈：", "Feedback: ")}${latestFollowup.feedback}`;
       followup.append(feedback);
     }
     card.append(followup);
@@ -670,7 +863,7 @@ function renderInterviewStage() {
 
 function renderHistory() {
   if (!state.turns.length) {
-    followupBox.textContent = "回答当前问题后，面试官会基于你的回答继续追问。";
+    followupBox.textContent = localize("回答当前问题后，面试官会基于你的回答继续追问。", "After you answer the current question, the interviewer will dig deeper based on your response.");
     return;
   }
 
@@ -685,16 +878,16 @@ function renderHistory() {
     entry.className = "followup-entry";
     title.textContent = `Q${index + 1}`;
     question.textContent = item.question;
-    answer.textContent = item.answer ? `回答：${item.answer}` : "回答：未填写";
+    answer.textContent = item.answer ? `${localize("回答：", "Answer: ")}${item.answer}` : localize("回答：未填写", "Answer: Not filled");
     followups.className = "followup-stack";
     (item.followups || []).forEach((followup, followupIndex) => {
       const node = document.createElement("p");
-      node.textContent = `追问${followupIndex + 1}：${followup.question}${followup.answer ? ` / 回答：${followup.answer}` : ""}${followup.feedback ? ` / 反馈：${followup.feedback}` : ""}`;
+      node.textContent = `${localize("追问", "Follow-up")}${followupIndex + 1}${localize("：", ": ")}${followup.question}${followup.answer ? ` / ${localize("回答：", "Answer: ")}${followup.answer}` : ""}${followup.feedback ? ` / ${localize("反馈：", "Feedback: ")}${followup.feedback}` : ""}`;
       followups.append(node);
     });
     if (!(item.followups || []).length) {
       const node = document.createElement("p");
-      node.textContent = "追问：待生成";
+      node.textContent = localize("追问：待生成", "Follow-up: Pending");
       followups.append(node);
     }
 
@@ -733,7 +926,7 @@ async function handleFollowup(fromFollowupAnswer = false) {
   saveCurrentTurn();
   const turn = state.turns[state.currentIndex];
   const followupAnswer = fromFollowupAnswer ? saveCurrentFollowupAnswer() : "";
-  outputState.textContent = "生成追问中";
+  outputState.textContent = localize("生成追问中", "Generating follow-up");
   setProgressStep("followup");
 
   try {
@@ -742,7 +935,7 @@ async function handleFollowup(fromFollowupAnswer = false) {
       const result = parseJsonText(text);
       turn.followups = turn.followups || [];
       turn.followups.push({
-        question: result.followup || "请继续补充关键细节。",
+        question: result.followup || localize("请继续补充关键细节。", "Please add more key details."),
         answer: "",
         feedback: result.feedback || "",
       });
@@ -752,19 +945,19 @@ async function handleFollowup(fromFollowupAnswer = false) {
       turn.followups.push({
         question: buildLocalFollowup(turn.question, fromFollowupAnswer ? followupAnswer : turn.answer, state.currentIndex, fromFollowupAnswer ? turn.followups.at(-1)?.question : ""),
         answer: "",
-        feedback: "本地模拟反馈：建议补充量化结果、个人贡献和复盘。",
+        feedback: localize("本地模拟反馈：建议补充量化结果、个人贡献和复盘。", "Local feedback: add metrics, personal contribution, and reflection."),
       });
       state.engine = "local";
     }
-    outputState.textContent = "已生成追问";
+    outputState.textContent = localize("已生成追问", "Follow-up generated");
   } catch (error) {
     turn.followups = turn.followups || [];
     turn.followups.push({
       question: buildLocalFollowup(turn.question, fromFollowupAnswer ? followupAnswer : turn.answer, state.currentIndex, fromFollowupAnswer ? turn.followups.at(-1)?.question : ""),
       answer: "",
-      feedback: `API 调用失败，已使用本地模拟。${error.message}`,
+      feedback: `${localize("API 调用失败，已使用本地模拟。", "API call failed. Used local simulation. ")}${error.message}`,
     });
-    outputState.textContent = "API 失败，已兜底";
+    outputState.textContent = localize("API 失败，已兜底", "API failed, fallback used");
   }
 
   renderInterviewStage();
@@ -777,10 +970,10 @@ function nextQuestion() {
   saveCurrentFollowupAnswer();
   if (state.currentIndex < state.questions.length - 1) {
     state.currentIndex += 1;
-    outputState.textContent = `第 ${state.currentIndex + 1} 题`;
+    outputState.textContent = localize(`第 ${state.currentIndex + 1} 题`, `Question ${state.currentIndex + 1}`);
     setProgressStep("interview");
   } else {
-    outputState.textContent = "本轮完成";
+    outputState.textContent = localize("本轮完成", "Round complete");
     setProgressStep("followup");
   }
   renderInterviewStage();
@@ -792,8 +985,8 @@ async function renderResult() {
   const materials = getMaterials();
   state.currentIndex = 0;
   state.turns = [];
-  setBusy(true, "生成中...");
-  outputState.textContent = apiKeyInput.value.trim() ? `调用 ${getProviderLabel()} 中` : "生成本地模拟";
+  setBusy(true, localize("生成中...", "Generating..."));
+  outputState.textContent = apiKeyInput.value.trim() ? localize(`调用 ${getProviderLabel()} 中`, `Calling ${getProviderLabel()}`) : localize("生成本地模拟", "Generating local simulation");
   setProgressStep("interview");
 
   try {
@@ -813,22 +1006,22 @@ async function renderResult() {
       matchScore.textContent = materialLevel === "complete" ? "86%" : materialLevel === "partial" ? "62%" : "待补充";
       duration.textContent = state.round === "HR 面" ? "25 min" : "45 min";
       setAnalysis([
-        "未填写 API Key，当前使用本地模拟问题。",
-        "填写所选供应商 API Key 后，会基于 JD、简历和回答实时生成问题与追问。",
-        "建议提供完整 JD 和简历文本，以获得更贴近目标岗位的模拟面试。",
+        localize("未填写 API Key，当前使用本地模拟问题。", "No API key provided. Using local simulated questions."),
+        localize("填写所选供应商 API Key 后，会基于 JD、简历和回答实时生成问题与追问。", "After entering the selected provider API key, questions and follow-ups are generated live from the JD, resume, and answers."),
+        localize("建议提供完整 JD 和简历文本，以获得更贴近目标岗位的模拟面试。", "Provide a complete JD and resume for a more targeted mock interview."),
       ]);
     }
-    outputState.textContent = state.engine === "api" ? `${getProviderLabel()} 已生成` : "本地模拟已生成";
+    outputState.textContent = state.engine === "api" ? localize(`${getProviderLabel()} 已生成`, `${getProviderLabel()} generated`) : localize("本地模拟已生成", "Local simulation generated");
   } catch (error) {
     state.questions = buildLocalQuestions(materials.company, materials.role);
     state.engine = "local";
-    outputState.textContent = "API 失败，已兜底";
-    matchScore.textContent = "待补充";
+    outputState.textContent = localize("API 失败，已兜底", "API failed, fallback used");
+    matchScore.textContent = localize("待补充", "Pending");
     duration.textContent = state.round === "HR 面" ? "25 min" : "45 min";
     setAnalysis([
       `${getProviderLabel()} API 调用失败，已切换到本地模拟。`,
       error.message,
-      "请检查 API Key、模型名称、账户额度和浏览器网络限制。",
+      localize("请检查 API Key、模型名称、账户额度和浏览器网络限制。", "Check your API key, model name, account quota, and browser/network restrictions."),
     ]);
   } finally {
     questionCount.textContent = String(state.questions.length || 0);
@@ -850,12 +1043,12 @@ function resetAll() {
   document.querySelector("#resumeFileMeta").textContent = "尚未选择文件";
   state.parsedFiles.jd = "";
   state.parsedFiles.resume = "";
-  outputState.textContent = "等待输入";
+  outputState.textContent = localize("等待输入", "Waiting");
   setProgressStep("materials");
   matchScore.textContent = "--";
   questionCount.textContent = "--";
   duration.textContent = "--";
-  analysisList.innerHTML = "<li>输入 JD 和简历后生成强匹配、需补强和简历弱点。</li>";
+  analysisList.innerHTML = `<li>${localize("输入 JD 和简历后生成强匹配、需补强和简历弱点。", "Enter a JD and resume to generate strengths, gaps, and resume risks.")}</li>`;
   state.questions = [];
   state.currentIndex = 0;
   state.turns = [];
@@ -868,6 +1061,10 @@ bindTabs();
 bindSegmented();
 bindFiles();
 bindProviderModels();
+languageToggle.addEventListener("click", () => {
+  applyLanguage(state.lang === "zh" ? "en" : "zh");
+});
+applyLanguage(state.lang);
 setProgressStep("materials");
 generateButton.addEventListener("click", renderResult);
 document.querySelector("#resetButton").addEventListener("click", resetAll);
