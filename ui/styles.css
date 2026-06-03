@@ -371,28 +371,46 @@ textarea:focus {
   line-height: 1.45;
 }
 
-.question-list {
+.question-list,
+.interview-stage {
   display: grid;
   gap: 10px;
 }
 
-.question-item {
+.question-item,
+.interview-card {
   padding: 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #fbfcfd;
 }
 
-.question-item strong {
+.question-item strong,
+.interview-card strong {
   display: block;
   margin-bottom: 6px;
 }
 
-.question-item span {
+.question-item span,
+.interview-card p {
   display: block;
   color: var(--muted);
   font-size: 13px;
   line-height: 1.45;
+}
+
+.interview-meta {
+  display: inline-flex;
+  width: fit-content;
+  min-height: 24px;
+  align-items: center;
+  padding: 0 8px;
+  margin-bottom: 8px;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .answer-input {
@@ -420,6 +438,16 @@ textarea:focus {
 
 .question-actions button:hover {
   background: var(--accent-strong);
+}
+
+.inline-followup {
+  margin-top: 10px;
+  padding: 10px;
+  border-left: 4px solid var(--accent);
+  border-radius: 8px;
+  background: #ecfdf5;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .followup-box {

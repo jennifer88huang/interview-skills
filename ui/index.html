@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>AI 模拟面试官 · 轻量 UI 原型</title>
-    <link rel="stylesheet" href="./styles.css?v=20260603-followup" />
+    <link rel="stylesheet" href="./styles.css?v=20260603-live-ai" />
   </head>
   <body>
     <main class="app-shell">
@@ -71,8 +71,20 @@
             </label>
           </div>
 
+          <div class="field-group">
+            <span class="field-label">AI 引擎</span>
+            <label>
+              OpenAI API Key
+              <input id="apiKeyInput" type="password" placeholder="sk-..." autocomplete="off" />
+            </label>
+            <label>
+              模型
+              <input id="modelInput" type="text" value="gpt-4.1-mini" />
+            </label>
+          </div>
+
           <button id="generateButton" class="primary-action" type="button">开始模拟面试</button>
-          <p class="privacy-note">本原型仅在浏览器本地展示输入状态，不上传文件。</p>
+          <p class="privacy-note">未填写 API Key 时使用本地模拟；填写后直接调用 OpenAI，Key 仅保存在当前浏览器会话。</p>
         </aside>
 
         <section class="input-panel" aria-label="材料输入">
@@ -170,20 +182,20 @@
           </div>
 
           <div class="result-block">
-            <h3>面试 10 问预览</h3>
-            <div id="questionList" class="question-list">
+            <h3>模拟面试</h3>
+            <div id="interviewStage" class="interview-stage">
               <p class="empty-state">点击「开始模拟面试」后，这里会展示按公司风格生成的问题。</p>
             </div>
           </div>
 
           <div class="result-block">
-            <h3>下一步追问</h3>
+            <h3>面试记录</h3>
             <div class="followup-box" id="followupBox">回答任意问题后，AI 面试官会基于你的回答继续深挖。</div>
           </div>
         </section>
       </section>
     </main>
 
-    <script src="./app.js?v=20260603-followup"></script>
+    <script src="./app.js?v=20260603-live-ai"></script>
   </body>
 </html>

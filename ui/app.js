@@ -1,7 +1,9 @@
 const state = {
   round: "一面",
   questions: [],
-  followups: [],
+  currentIndex: 0,
+  turns: [],
+  engine: "local",
 };
 
 const companyInput = document.querySelector("#companyInput");
@@ -9,13 +11,16 @@ const roleInput = document.querySelector("#roleInput");
 const jdLink = document.querySelector("#jdLink");
 const jdText = document.querySelector("#jdText");
 const resumeText = document.querySelector("#resumeText");
+const apiKeyInput = document.querySelector("#apiKeyInput");
+const modelInput = document.querySelector("#modelInput");
 const outputState = document.querySelector("#outputState");
 const matchScore = document.querySelector("#matchScore");
 const questionCount = document.querySelector("#questionCount");
 const duration = document.querySelector("#duration");
 const analysisList = document.querySelector("#analysisList");
-const questionList = document.querySelector("#questionList");
+const interviewStage = document.querySelector("#interviewStage");
 const followupBox = document.querySelector("#followupBox");
+const generateButton = document.querySelector("#generateButton");
 
 function bindTabs() {
   document.querySelectorAll(".tabs").forEach((tabs) => {
@@ -67,6 +72,21 @@ function bindFiles() {
   });
 }
 
+function setBusy(isBusy, label = "处理中...") {
+  generateButton.disabled = isBusy;
+  generateButton.textContent = isBusy ? label : "开始模拟面试";
+}
+
+function getMaterials() {
+  return {
+    company: companyInput.value.trim() || "目标公司",
+    role: roleInput.value.trim() || "目标岗位",
+    round: state.round,
+    jd: jdText.value.trim() || jdLink.value.trim() || "未提供完整 JD",
+    resume: resumeText.value.trim() || "未提供完整简历",
+  };
+}
+
 function getMaterialLevel() {
   const jdHasContent = jdLink.value.trim() || jdText.value.trim() || document.querySelector("#jdFile").files.length;
   const resumeHasContent = resumeText.value.trim() || document.querySelector("#resumeFile").files.length;
@@ -76,22 +96,7 @@ function getMaterialLevel() {
   return "empty";
 }
 
-function buildQuestions(company, role) {
-  const targetCompany = company || "目标公司";
-  const targetRole = role || "目标岗位";
-  const base = [
-    `请结合最近一个项目做 2 分钟自我介绍，并说明为什么匹配 ${targetCompany} ${targetRole}。`,
-    `JD 中最核心的硬技能要求是什么？请选一个你最熟的点讲到底层原理。`,
-    `你简历里最有代表性的项目，最大技术或业务挑战是什么？你具体负责哪一部分？`,
-    `如果面试官质疑你的项目数据或影响力，你会如何证明结果真实可靠？`,
-    `请设计一个和 ${targetRole} 相关的典型系统或业务方案，并说明关键权衡。`,
-    `如果入职后发现 JD 里有一项能力你并不熟，你会如何在 30 天内补齐？`,
-    `讲一次跨团队协作中的冲突，你如何推动对方达成一致？`,
-    `${targetCompany} 这类公司通常重视结果和 owner 意识，请讲一个你主动补位的案例。`,
-    `如果本轮面试只让你强调一个优势，你会选择哪一个？为什么？`,
-    `你有什么想反问面试官的问题？请围绕团队目标、岗位挑战和成长空间组织。`,
-  ];
-
+function buildLocalQuestions(company, role) {
   if (state.round === "HR 面") {
     return [
       "你为什么考虑这个机会？真实动机是什么？",
@@ -107,7 +112,18 @@ function buildQuestions(company, role) {
     ];
   }
 
-  return base;
+  return [
+    `请结合最近一个项目做 2 分钟自我介绍，并说明为什么匹配 ${company} ${role}。`,
+    "JD 中最核心的硬技能要求是什么？请选一个你最熟的点讲到底层原理。",
+    "你简历里最有代表性的项目，最大技术或业务挑战是什么？你具体负责哪一部分？",
+    "如果面试官质疑你的项目数据或影响力，你会如何证明结果真实可靠？",
+    `请设计一个和 ${role} 相关的典型系统或业务方案，并说明关键权衡。`,
+    "如果入职后发现 JD 里有一项能力你并不熟，你会如何在 30 天内补齐？",
+    "讲一次跨团队协作中的冲突，你如何推动对方达成一致？",
+    `${company} 这类公司通常重视结果和 owner 意识，请讲一个你主动补位的案例。`,
+    "如果本轮面试只让你强调一个优势，你会选择哪一个？为什么？",
+    "你有什么想反问面试官的问题？请围绕团队目标、岗位挑战和成长空间组织。",
+  ];
 }
 
 function getQuestionCategory(index) {
@@ -116,23 +132,21 @@ function getQuestionCategory(index) {
   return "行为/收尾";
 }
 
-function buildFollowup(question, answer, index) {
-  const company = companyInput.value.trim() || "目标公司";
-  const role = roleInput.value.trim() || "目标岗位";
+function buildLocalFollowup(question, answer, index) {
+  const { company, role } = getMaterials();
   const cleanAnswer = answer.trim();
-  const answerLength = cleanAnswer.length;
   const category = getQuestionCategory(index);
 
   if (!cleanAnswer) {
     return "请先输入你的回答，再继续追问。我会重点看你的职责边界、关键动作、结果证据和复盘深度。";
   }
 
-  if (answerLength < 40) {
-    return `你刚才的回答还比较短。请继续补充：在这个案例里，你具体负责什么、为什么这么做、结果如何量化，以及它和 ${company} ${role} 的要求有什么对应关系？`;
+  if (cleanAnswer.length < 40) {
+    return `你的回答还比较短。请继续补充：你具体负责什么、为什么这么做、结果如何量化，以及它和 ${company} ${role} 的要求有什么对应关系？`;
   }
 
   if (/我们|团队|大家/.test(cleanAnswer) && !/我/.test(cleanAnswer)) {
-    return "你用了较多团队视角。请把回答切到个人贡献：哪一部分是你独立负责的？关键决策是谁做的？如果没有你，结果会有什么差异？";
+    return "你用了较多团队视角。请切到个人贡献：哪一部分是你独立负责的？关键决策是谁做的？如果没有你，结果会有什么差异？";
   }
 
   if (!/[0-9一二三四五六七八九十百千万%]/.test(cleanAnswer)) {
@@ -150,100 +164,309 @@ function buildFollowup(question, answer, index) {
   return "请进一步讲清楚底层逻辑：这个结论依赖哪些前提？如果面试官挑战其中一个前提，你会用什么事实或案例支撑？";
 }
 
-function renderFollowupHistory() {
-  if (!state.followups.length) {
-    followupBox.textContent = document.querySelector("#modeFollowup").checked
-      ? "选择一道题并输入回答后，AI 面试官会基于你的回答继续追问。"
-      : "已关闭自动追问，可在题目下方手动点击「生成追问」练习。";
+function extractResponseText(data) {
+  if (typeof data.output_text === "string") return data.output_text;
+
+  const chunks = [];
+  (data.output || []).forEach((item) => {
+    (item.content || []).forEach((content) => {
+      if (content.text) chunks.push(content.text);
+    });
+  });
+  return chunks.join("\n").trim();
+}
+
+function parseJsonText(text) {
+  const trimmed = text.trim();
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    const match = trimmed.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error("模型返回内容不是有效 JSON。");
+    return JSON.parse(match[0]);
+  }
+}
+
+async function callOpenAI(prompt) {
+  const apiKey = apiKeyInput.value.trim();
+  const model = modelInput.value.trim() || "gpt-4.1-mini";
+  if (!apiKey) throw new Error("请先填写 OpenAI API Key。");
+
+  const response = await fetch("https://api.openai.com/v1/responses", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model,
+      input: prompt,
+      temperature: 0.4,
+    }),
+  });
+
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(`OpenAI 请求失败：${response.status} ${message}`);
+  }
+
+  return extractResponseText(await response.json());
+}
+
+function buildInterviewPrompt(materials) {
+  return `
+你是一位严格但有建设性的中文模拟面试官。请基于 JD 和简历生成一轮可直接开始的模拟面试。
+
+目标公司：${materials.company}
+目标岗位：${materials.role}
+面试轮次：${materials.round}
+JD：${materials.jd}
+简历：${materials.resume}
+
+只返回 JSON，不要 Markdown。格式：
+{
+  "matchScore": "78%",
+  "duration": "45 min",
+  "analysis": ["强匹配点...", "风险点...", "建议补强..."],
+  "questions": ["问题1", "问题2", "...共10个问题"]
+}
+要求：
+- questions 必须是 10 个中文问题。
+- 问题要结合 JD 和简历，不要泛泛而谈。
+- 至少 4 个项目深挖问题，至少 2 个行为问题，最后 1 个反问准备问题。
+`.trim();
+}
+
+function buildFollowupPrompt(turn) {
+  const materials = getMaterials();
+  const transcript = state.turns.map((item, index) => (
+    `Q${index + 1}: ${item.question}\n回答: ${item.answer || "未回答"}\n追问: ${item.followup || "无"}`
+  )).join("\n\n");
+
+  return `
+你是一位中文模拟面试官。请基于候选人的回答继续追问，并给出简短反馈。
+
+目标公司：${materials.company}
+目标岗位：${materials.role}
+面试轮次：${materials.round}
+JD：${materials.jd}
+简历：${materials.resume}
+
+当前问题：${turn.question}
+候选人回答：${turn.answer}
+
+历史记录：
+${transcript || "暂无"}
+
+只返回 JSON，不要 Markdown。格式：
+{
+  "followup": "下一句追问，必须尖锐具体，围绕回答中的漏洞或可深挖点",
+  "feedback": "不超过80字的反馈，指出一个优点和一个需要补强点"
+}
+`.trim();
+}
+
+function setAnalysis(items) {
+  analysisList.replaceChildren();
+  items.forEach((item) => {
+    const li = document.createElement("li");
+    li.textContent = item;
+    analysisList.append(li);
+  });
+}
+
+function renderInterviewStage() {
+  interviewStage.replaceChildren();
+
+  if (!state.questions.length) {
+    interviewStage.innerHTML = '<p class="empty-state">点击「开始模拟面试」后，这里会展示按公司风格生成的问题。</p>';
+    return;
+  }
+
+  const index = state.currentIndex;
+  const question = state.questions[index];
+  const existingTurn = state.turns[index] || {};
+  const card = document.createElement("article");
+  const meta = document.createElement("div");
+  const title = document.createElement("strong");
+  const body = document.createElement("p");
+  const answer = document.createElement("textarea");
+  const actions = document.createElement("div");
+  const followupButton = document.createElement("button");
+  const nextButton = document.createElement("button");
+
+  card.className = "interview-card";
+  meta.className = "interview-meta";
+  title.textContent = `Q${index + 1} / ${state.questions.length} · ${getQuestionCategory(index)}`;
+  meta.textContent = state.engine === "openai" ? "OpenAI 实时生成" : "本地模拟";
+  body.textContent = question;
+  answer.id = "currentAnswer";
+  answer.className = "answer-input";
+  answer.placeholder = "像真实面试一样输入你的回答，然后点击生成追问";
+  answer.value = existingTurn.answer || "";
+  actions.className = "question-actions";
+  followupButton.type = "button";
+  followupButton.textContent = "生成追问";
+  followupButton.addEventListener("click", () => handleFollowup());
+  nextButton.type = "button";
+  nextButton.textContent = index === state.questions.length - 1 ? "完成本轮" : "下一题";
+  nextButton.addEventListener("click", nextQuestion);
+
+  actions.append(followupButton, nextButton);
+  card.append(meta, title, body, answer, actions);
+
+  if (existingTurn.followup) {
+    const followup = document.createElement("div");
+    followup.className = "inline-followup";
+    followup.textContent = existingTurn.feedback
+      ? `${existingTurn.followup} 反馈：${existingTurn.feedback}`
+      : existingTurn.followup;
+    card.append(followup);
+  }
+
+  interviewStage.append(card);
+}
+
+function renderHistory() {
+  if (!state.turns.length) {
+    followupBox.textContent = "回答当前问题后，面试官会基于你的回答继续追问。";
     return;
   }
 
   followupBox.replaceChildren();
-  state.followups.slice(-3).forEach((item) => {
+  state.turns.forEach((item, index) => {
     const entry = document.createElement("article");
     const title = document.createElement("strong");
     const question = document.createElement("p");
+    const answer = document.createElement("p");
     const followup = document.createElement("p");
 
     entry.className = "followup-entry";
-    title.textContent = `Q${item.index + 1} 追问`;
+    title.textContent = `Q${index + 1}`;
     question.textContent = item.question;
-    followup.textContent = item.followup;
+    answer.textContent = item.answer ? `回答：${item.answer}` : "回答：未填写";
+    followup.textContent = item.followup ? `追问：${item.followup}` : "追问：待生成";
 
-    entry.append(title, question, followup);
+    entry.append(title, question, answer, followup);
+    if (item.feedback) {
+      const feedback = document.createElement("p");
+      feedback.textContent = `反馈：${item.feedback}`;
+      entry.append(feedback);
+    }
     followupBox.append(entry);
   });
 }
 
-function handleFollowup(index) {
-  const answer = document.querySelector(`#answer-${index}`).value;
-  const question = state.questions[index];
-  const followup = buildFollowup(question, answer, index);
-
-  state.followups.push({ index, question, answer, followup });
-  outputState.textContent = "已生成追问";
-  renderFollowupHistory();
+function saveCurrentTurn(patch = {}) {
+  const question = state.questions[state.currentIndex];
+  const answerNode = document.querySelector("#currentAnswer");
+  const existing = state.turns[state.currentIndex] || {};
+  state.turns[state.currentIndex] = {
+    question,
+    answer: answerNode ? answerNode.value.trim() : existing.answer || "",
+    followup: existing.followup || "",
+    feedback: existing.feedback || "",
+    ...patch,
+  };
 }
 
-function renderResult() {
+async function handleFollowup() {
+  if (!state.questions.length) return;
+
+  saveCurrentTurn();
+  const turn = state.turns[state.currentIndex];
+  outputState.textContent = "生成追问中";
+
+  try {
+    if (apiKeyInput.value.trim()) {
+      const text = await callOpenAI(buildFollowupPrompt(turn));
+      const result = parseJsonText(text);
+      saveCurrentTurn({
+        followup: result.followup || "请继续补充关键细节。",
+        feedback: result.feedback || "",
+      });
+      state.engine = "openai";
+    } else {
+      saveCurrentTurn({
+        followup: buildLocalFollowup(turn.question, turn.answer, state.currentIndex),
+        feedback: "本地模拟反馈：建议补充量化结果、个人贡献和复盘。",
+      });
+      state.engine = "local";
+    }
+    outputState.textContent = "已生成追问";
+  } catch (error) {
+    saveCurrentTurn({
+      followup: buildLocalFollowup(turn.question, turn.answer, state.currentIndex),
+      feedback: `API 调用失败，已使用本地模拟。${error.message}`,
+    });
+    outputState.textContent = "API 失败，已兜底";
+  }
+
+  renderInterviewStage();
+  renderHistory();
+}
+
+function nextQuestion() {
+  if (!state.questions.length) return;
+  saveCurrentTurn();
+  if (state.currentIndex < state.questions.length - 1) {
+    state.currentIndex += 1;
+    outputState.textContent = `第 ${state.currentIndex + 1} 题`;
+  } else {
+    outputState.textContent = "本轮完成";
+  }
+  renderInterviewStage();
+  renderHistory();
+}
+
+async function renderResult() {
   const materialLevel = getMaterialLevel();
-  const company = companyInput.value.trim();
-  const role = roleInput.value.trim();
-  const questions = buildQuestions(company, role);
-  state.questions = questions;
-  state.followups = [];
+  const materials = getMaterials();
+  state.currentIndex = 0;
+  state.turns = [];
+  setBusy(true, "生成中...");
+  outputState.textContent = apiKeyInput.value.trim() ? "调用 OpenAI 中" : "生成本地模拟";
 
-  outputState.textContent = "已生成原型结果";
-  matchScore.textContent = materialLevel === "complete" ? "86%" : materialLevel === "partial" ? "62%" : "待补充";
-  questionCount.textContent = "10";
-  duration.textContent = state.round === "HR 面" ? "25 min" : "45 min";
-
-  const analysis = {
-    complete: [
-      "强匹配：已同时提供 JD 和简历，可基于岗位要求与个人经历做双向锚定。",
-      "需补强：建议补充项目量化指标，例如 QPS、DAU、转化率、成本下降比例。",
-      "简历弱点：若某些 JD 必备技能没有案例支撑，面试官会优先追问真实参与度。",
-    ],
-    partial: [
-      "当前材料不完整，已按已有内容生成问题，但个性化程度有限。",
-      "建议补齐 JD 和简历两类信息，才能输出强匹配、需补强和简历弱点。",
-      "缺失简历时，问题会按理想候选人画像生成，难度可能偏离本人背景。",
-    ],
-    empty: [
-      "请先提供 JD 或简历内容。",
-      "最小可用输入是目标公司、岗位名称和一段 JD 文本。",
-      "上传 PDF、Word 或图片后，后续可接入解析服务生成结构化素材。",
-    ],
-  }[materialLevel];
-
-  analysisList.innerHTML = analysis.map((item) => `<li>${item}</li>`).join("");
-  questionList.replaceChildren();
-  questions.forEach((question, index) => {
-    const item = document.createElement("article");
-    const title = document.createElement("strong");
-    const body = document.createElement("span");
-    const answer = document.createElement("textarea");
-    const actions = document.createElement("div");
-    const button = document.createElement("button");
-
-    item.className = "question-item";
-    title.textContent = `Q${index + 1} · ${getQuestionCategory(index)}`;
-    body.textContent = question;
-    answer.id = `answer-${index}`;
-    answer.className = "answer-input";
-    answer.placeholder = "输入你的回答后生成追问";
-    answer.rows = 3;
-    actions.className = "question-actions";
-    button.type = "button";
-    button.textContent = "生成追问";
-    button.addEventListener("click", () => handleFollowup(index));
-    actions.append(button);
-
-    item.append(title, body, answer, actions);
-    questionList.append(item);
-  });
-
-  renderFollowupHistory();
+  try {
+    if (apiKeyInput.value.trim()) {
+      const text = await callOpenAI(buildInterviewPrompt(materials));
+      const result = parseJsonText(text);
+      state.questions = Array.isArray(result.questions) && result.questions.length
+        ? result.questions.slice(0, 10)
+        : buildLocalQuestions(materials.company, materials.role);
+      state.engine = "openai";
+      matchScore.textContent = result.matchScore || "已分析";
+      duration.textContent = result.duration || (state.round === "HR 面" ? "25 min" : "45 min");
+      setAnalysis(Array.isArray(result.analysis) ? result.analysis : ["已基于 JD 和简历生成定制面试问题。"]);
+    } else {
+      state.questions = buildLocalQuestions(materials.company, materials.role);
+      state.engine = "local";
+      matchScore.textContent = materialLevel === "complete" ? "86%" : materialLevel === "partial" ? "62%" : "待补充";
+      duration.textContent = state.round === "HR 面" ? "25 min" : "45 min";
+      setAnalysis([
+        "未填写 API Key，当前使用本地模拟问题。",
+        "填写 OpenAI API Key 后，会基于 JD、简历和回答实时生成问题与追问。",
+        "建议提供完整 JD 和简历文本，以获得更贴近目标岗位的模拟面试。",
+      ]);
+    }
+    outputState.textContent = state.engine === "openai" ? "OpenAI 已生成" : "本地模拟已生成";
+  } catch (error) {
+    state.questions = buildLocalQuestions(materials.company, materials.role);
+    state.engine = "local";
+    outputState.textContent = "API 失败，已兜底";
+    matchScore.textContent = "待补充";
+    duration.textContent = state.round === "HR 面" ? "25 min" : "45 min";
+    setAnalysis([
+      "OpenAI API 调用失败，已切换到本地模拟。",
+      error.message,
+      "请检查 API Key、模型名称、账户额度和浏览器网络限制。",
+    ]);
+  } finally {
+    questionCount.textContent = String(state.questions.length || 0);
+    renderInterviewStage();
+    renderHistory();
+    setBusy(false);
+  }
 }
 
 function resetAll() {
@@ -261,14 +484,16 @@ function resetAll() {
   questionCount.textContent = "--";
   duration.textContent = "--";
   analysisList.innerHTML = "<li>输入 JD 和简历后生成强匹配、需补强和简历弱点。</li>";
-  questionList.innerHTML = '<p class="empty-state">点击「开始模拟面试」后，这里会展示按公司风格生成的问题。</p>';
   state.questions = [];
-  state.followups = [];
-  followupBox.textContent = "回答任意问题后，AI 面试官会基于你的回答继续深挖。";
+  state.currentIndex = 0;
+  state.turns = [];
+  state.engine = "local";
+  renderInterviewStage();
+  renderHistory();
 }
 
 bindTabs();
 bindSegmented();
 bindFiles();
-document.querySelector("#generateButton").addEventListener("click", renderResult);
+generateButton.addEventListener("click", renderResult);
 document.querySelector("#resetButton").addEventListener("click", resetAll);
