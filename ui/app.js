@@ -1,5 +1,10 @@
+const requestedLang = new URLSearchParams(window.location.search).get("lang");
+const initialLang = ["zh", "en"].includes(requestedLang)
+  ? requestedLang
+  : localStorage.getItem("interviewSkillsLang") || (navigator.language.toLowerCase().startsWith("zh") ? "zh" : "en");
+
 const state = {
-  lang: localStorage.getItem("interviewSkillsLang") || (navigator.language.toLowerCase().startsWith("zh") ? "zh" : "en"),
+  lang: initialLang,
   round: "一面",
   questions: [],
   currentIndex: 0,
@@ -98,7 +103,7 @@ const modelCatalog = {
     ["deepseek/deepseek-chat", "DeepSeek Chat"],
   ],
   other: [
-    ["custom", "自定义模型"],
+    ["custom", "Custom Model"],
   ],
 };
 const providerLabels = {
@@ -115,7 +120,7 @@ const providerLabels = {
   mistral: "Mistral",
   perplexity: "Perplexity",
   openrouter: "OpenRouter",
-  other: "自定义模型",
+  other: "Custom Model",
 };
 const providerConfig = {
   deepseek: { type: "openai-compatible", endpoint: "https://api.deepseek.com/chat/completions" },
@@ -164,6 +169,7 @@ const staticText = {
   "粘贴 JD 原文": "Paste JD Text",
   "上传 JD 文件": "Upload JD File",
   "支持 PDF、Word、图片、TXT、Markdown": "Supports PDF, Word, images, TXT, Markdown",
+  "尚未选择文件": "No file selected",
   "简历内容": "Resume Content",
   "文本 / 图片 / Word / PDF": "Text / Image / Word / PDF",
   "粘贴简历内容": "Paste Resume Text",
@@ -183,9 +189,9 @@ const staticText = {
   "自定义模型": "Custom Model",
 };
 const placeholderText = {
-  companyInput: ["例如：阿里巴巴 / 字节跳动 / Google", "e.g. Alibaba / ByteDance / Google"],
+  companyInput: ["例如：腾讯 / 阿里 / 字节", "e.g. Google / Meta / Microsoft"],
   roleInput: ["例如：后端工程师 / 产品经理 / 数据分析师", "e.g. Backend Engineer / Product Manager / Data Analyst"],
-  apiKeyInput: ["粘贴所选供应商的 API Key", "Paste the selected provider API key"],
+  apiKeyInput: ["sk-", "sk-"],
   customModelInput: ["例如：provider/model-name", "e.g. provider/model-name"],
   customEndpointInput: ["https://.../v1/chat/completions", "https://.../v1/chat/completions"],
   jdLink: ["https://...", "https://..."],
@@ -219,7 +225,16 @@ function applyLanguage(targetLang = state.lang) {
   localStorage.setItem("interviewSkillsLang", state.lang);
   document.documentElement.lang = state.lang === "zh" ? "zh-CN" : "en";
   document.title = localize("AI 模拟面试官 · 轻量 UI 原型", "AI Mock Interviewer · Lightweight UI");
-  languageToggle.textContent = state.lang === "zh" ? "English" : "中文";
+  languageToggle.textContent = state.lang === "zh" ? "English" : "Chinese";
+  document.querySelector(".brand img").alt = localize("AI 模拟面试官", "AI Mock Interviewer");
+  document.querySelector("#resetButton").title = localize("重置", "Reset");
+  document.querySelector(".status-strip").setAttribute("aria-label", localize("流程状态", "Progress status"));
+  document.querySelector(".setup-panel").setAttribute("aria-label", localize("面试设置", "Interview setup"));
+  document.querySelector(".segmented").setAttribute("aria-label", localize("面试轮次", "Interview round"));
+  document.querySelector(".input-panel").setAttribute("aria-label", localize("材料输入", "Materials input"));
+  document.querySelector(".output-panel").setAttribute("aria-label", localize("模拟输出", "Mock interview output"));
+  document.querySelector('[aria-label="JD 输入方式"], [aria-label="JD input method"]').setAttribute("aria-label", localize("JD 输入方式", "JD input method"));
+  document.querySelector('[aria-label="简历输入方式"], [aria-label="Resume input method"]').setAttribute("aria-label", localize("简历输入方式", "Resume input method"));
   translateStaticText(state.lang);
 
   Object.entries(placeholderText).forEach(([id, values]) => {
@@ -257,13 +272,13 @@ function bindProviderModels() {
   const renderModels = () => {
     const provider = providerSelect.value;
     const config = providerConfig[provider] || {};
-  modelInput.replaceChildren();
-  modelCatalog[provider].forEach(([value, label]) => {
-    const option = document.createElement("option");
-    option.value = value;
-    option.textContent = label === "自定义模型" ? localize("自定义模型", "Custom Model") : label;
-    modelInput.append(option);
-  });
+    modelInput.replaceChildren();
+    modelCatalog[provider].forEach(([value, label]) => {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = label;
+      modelInput.append(option);
+    });
     customModelField.classList.toggle("hidden", !config.needsCustomModel);
     customEndpointField.classList.toggle("hidden", !config.needsEndpoint);
   };
@@ -273,7 +288,7 @@ function bindProviderModels() {
 }
 
 function getProviderLabel() {
-  return providerLabels[providerSelect.value] || "所选模型";
+  return providerLabels[providerSelect.value] || localize("所选模型", "Selected model");
 }
 
 function getRoundLabel() {
@@ -410,8 +425,8 @@ function setBusy(isBusy, label = "处理中...") {
 
 function getMaterials() {
   return {
-    company: companyInput.value.trim() || "目标公司",
-    role: roleInput.value.trim() || "目标岗位",
+    company: companyInput.value.trim() || localize("目标公司", "target company"),
+    role: roleInput.value.trim() || localize("目标岗位", "target role"),
     round: getRoundLabel(),
     jd: jdText.value.trim() || state.parsedFiles.jd || jdLink.value.trim() || localize("未提供完整 JD", "No complete JD provided"),
     resume: resumeText.value.trim() || state.parsedFiles.resume || localize("未提供完整简历", "No complete resume provided"),
@@ -540,7 +555,7 @@ function parseJsonText(text) {
     return JSON.parse(trimmed);
   } catch {
     const match = trimmed.match(/\{[\s\S]*\}/);
-    if (!match) throw new Error("模型返回内容不是有效 JSON。");
+    if (!match) throw new Error(localize("模型返回内容不是有效 JSON。", "The model response was not valid JSON."));
     return JSON.parse(match[0]);
   }
 }
@@ -574,7 +589,7 @@ async function callOpenAICompatible(prompt, endpoint, apiKey, model, extraHeader
 
   if (!response.ok) {
     const message = await response.text();
-    throw new Error(`模型请求失败：${response.status} ${message}`);
+    throw new Error(localize(`模型请求失败：${response.status} ${message}`, `Model request failed: ${response.status} ${message}`));
   }
 
   return extractChatChoice(await response.json());
@@ -585,12 +600,12 @@ async function callModel(prompt) {
   const config = providerConfig[provider] || {};
   const apiKey = apiKeyInput.value.trim();
   const model = getSelectedModel();
-  if (!apiKey) throw new Error("请先填写所选供应商的 API Key。");
-  if (!model) throw new Error("请先选择或输入模型名。");
+  if (!apiKey) throw new Error(localize("请先填写所选供应商的 API Key。", "Enter the selected provider API key first."));
+  if (!model) throw new Error(localize("请先选择或输入模型名。", "Select or enter a model name first."));
 
   if (config.type === "openai-compatible") {
     const endpoint = config.needsEndpoint ? customEndpointInput.value.trim() : config.endpoint;
-    if (!endpoint) throw new Error("请填写 OpenAI-compatible API 地址。");
+    if (!endpoint) throw new Error(localize("请填写 OpenAI-compatible API 地址。", "Enter the OpenAI-compatible API endpoint."));
     const headers = provider === "openrouter" ? {
       "HTTP-Referer": window.location.href,
       "X-Title": "interview-skills mock interview",
@@ -617,7 +632,7 @@ async function callModel(prompt) {
 
     if (!response.ok) {
       const message = await response.text();
-      throw new Error(`Anthropic 请求失败：${response.status} ${message}`);
+      throw new Error(localize(`Anthropic 请求失败：${response.status} ${message}`, `Anthropic request failed: ${response.status} ${message}`));
     }
 
     return extractAnthropicText(await response.json());
@@ -637,7 +652,7 @@ async function callModel(prompt) {
 
     if (!response.ok) {
       const message = await response.text();
-      throw new Error(`Gemini 请求失败：${response.status} ${message}`);
+      throw new Error(localize(`Gemini 请求失败：${response.status} ${message}`, `Gemini request failed: ${response.status} ${message}`));
     }
 
     return extractGeminiText(await response.json());
@@ -658,7 +673,7 @@ async function callModel(prompt) {
 
   if (!response.ok) {
     const message = await response.text();
-    throw new Error(`OpenAI 请求失败：${response.status} ${message}`);
+    throw new Error(localize(`OpenAI 请求失败：${response.status} ${message}`, `OpenAI request failed: ${response.status} ${message}`));
   }
 
   return extractResponseText(await response.json());
@@ -811,7 +826,9 @@ function renderInterviewStage() {
   card.className = "interview-card";
   meta.className = "interview-meta";
   title.textContent = `Q${index + 1} / ${state.questions.length} · ${getQuestionCategory(index)}`;
-  meta.textContent = state.engine === "api" ? `${getProviderLabel()} 实时生成` : "本地模拟";
+  meta.textContent = state.engine === "api"
+    ? localize(`${getProviderLabel()} 实时生成`, `${getProviderLabel()} live generation`)
+    : localize("本地模拟", "Local simulation");
   body.textContent = question;
   answer.id = "currentAnswer";
   answer.className = "answer-input";
@@ -997,13 +1014,13 @@ async function renderResult() {
         ? result.questions.slice(0, 10)
         : buildLocalQuestions(materials.company, materials.role);
       state.engine = "api";
-      matchScore.textContent = result.matchScore || "已分析";
+      matchScore.textContent = result.matchScore || localize("已分析", "Analyzed");
       duration.textContent = result.duration || (state.round === "HR 面" ? "25 min" : "45 min");
-      setAnalysis(Array.isArray(result.analysis) ? result.analysis : ["已基于 JD 和简历生成定制面试问题。"]);
+      setAnalysis(Array.isArray(result.analysis) ? result.analysis : [localize("已基于 JD 和简历生成定制面试问题。", "Custom interview questions were generated from the JD and resume.")]);
     } else {
       state.questions = buildLocalQuestions(materials.company, materials.role);
       state.engine = "local";
-      matchScore.textContent = materialLevel === "complete" ? "86%" : materialLevel === "partial" ? "62%" : "待补充";
+      matchScore.textContent = materialLevel === "complete" ? "86%" : materialLevel === "partial" ? "62%" : localize("待补充", "Pending");
       duration.textContent = state.round === "HR 面" ? "25 min" : "45 min";
       setAnalysis([
         localize("未填写 API Key，当前使用本地模拟问题。", "No API key provided. Using local simulated questions."),
@@ -1019,7 +1036,7 @@ async function renderResult() {
     matchScore.textContent = localize("待补充", "Pending");
     duration.textContent = state.round === "HR 面" ? "25 min" : "45 min";
     setAnalysis([
-      `${getProviderLabel()} API 调用失败，已切换到本地模拟。`,
+      localize(`${getProviderLabel()} API 调用失败，已切换到本地模拟。`, `${getProviderLabel()} API failed. Switched to local simulation.`),
       error.message,
       localize("请检查 API Key、模型名称、账户额度和浏览器网络限制。", "Check your API key, model name, account quota, and browser/network restrictions."),
     ]);
@@ -1039,8 +1056,8 @@ function resetAll() {
   resumeText.value = "";
   document.querySelector("#jdFile").value = "";
   document.querySelector("#resumeFile").value = "";
-  document.querySelector("#jdFileMeta").textContent = "尚未选择文件";
-  document.querySelector("#resumeFileMeta").textContent = "尚未选择文件";
+  document.querySelector("#jdFileMeta").textContent = localize("尚未选择文件", "No file selected");
+  document.querySelector("#resumeFileMeta").textContent = localize("尚未选择文件", "No file selected");
   state.parsedFiles.jd = "";
   state.parsedFiles.resume = "";
   outputState.textContent = localize("等待输入", "Waiting");

@@ -317,17 +317,23 @@ textarea:focus {
 
 .dropzone {
   display: grid;
+  position: relative;
   place-items: center;
   min-height: 236px;
   padding: 24px;
   border: 1px dashed #9aa7b5;
   border-radius: 8px;
   background: #fbfcfd;
+  cursor: pointer;
   text-align: center;
 }
 
-.dropzone input {
-  width: min(260px, 100%);
+.dropzone input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .dropzone strong {
