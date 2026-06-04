@@ -4,7 +4,7 @@ Generate targeted mock interview questions from a real job description and a can
 
 ## News
 
-- **2026-06-04**: Added a browser-based Mock Interview UI with English/Chinese switching, JD/resume file or text input, provider/model/API key selection, and multi-turn follow-up practice based on candidate answers.
+- **2026-06-04**: Added a browser-based Mock Interview UI and enable users to mock interview process with provied JD and resume.
 - **2026-06-01**: Added `install-skill.sh`, allowing terminal users to run `bash install-skill.sh https://github.com/jennifer88huang/interview-skills.git` from the repository root.
 - **2026-05-28**: Added global big tech interview support for Google, Meta, Amazon/AWS, Microsoft, and related scenarios. 
 - **2026-04-24**: Added HR interview drills, salary negotiation scripts, and full multi-round interview flow simulation. 
@@ -50,12 +50,14 @@ https://jennifer88huang.github.io/interview-skills/ui/?lang=en
 
 The browser UI supports a full interactive practice loop:
 
-1. Fill in the target company, target role, and interview round on the left.
-2. Enter the JD in the center panel by pasting a link, pasting text, or uploading a PDF, Word, TXT, or Markdown file.
-3. Add the resume from the default File tab, or switch to Text and paste resume content manually.
-4. Choose a model provider and model in the lower-left AI Engine section. Put your API key in the API Key field using the `sk-` placeholder format. Without a key, the page uses local simulation; with a key, it calls the selected provider for live questions and follow-ups.
-5. Click Start Mock Interview, answer the current question, then click Generate Follow-up. The page will probe based on your answer, let you answer the follow-up, and continue the follow-up loop.
-6. The top progress indicator moves through Input Materials, Generate Interview, and Follow-up Practice. Use the top-right language button to switch between English and Chinese.
+1. Fill in the target company, target role, and interview round on the left panel.
+2. Enter the JD in the center panel by pasting a link, text, or uploading a PDF, Word, TXT, or Markdown file.
+3. Provide your resume in the center panel. You can upload your resume file or paste resume content manually. 
+4. In the lower-left AI Engine section, choose a model provider and model, and paste your API key.   
+   When you provide a key, the simulation process goes with live questions and follow-ups. If you do not provide API key, the page uses local simulation.
+6. Click **Start Mock Interview** in the lower-left section, answer the question in the **Result** panel in the right. Click **Generate Follow-up** or **Next Question** based on your requirement. 
+
+The top progress indicator moves through Input Materials, Generate Interview, and Follow-up Practice. Use the top-right language button to switch between English and Chinese.
 
 <img src="assets/mock-interview-ui-en.png" alt="Browser Mock Interview UI screenshot" width="100%">
 
