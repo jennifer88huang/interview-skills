@@ -13,7 +13,7 @@ This repository is designed for interview preparation, job interview practice, r
 
 **Live Demo: [Interview Skills AI Mock Interview Coach](https://jennifer88huang.github.io/interview-skills/)**
 
-**Web App: [Start a mock interview from JD and resume](https://jennifer88huang.github.io/interview-skills/ui/)**
+**Web App: [Start a mock interview from JD and resume](https://jennifer88huang.github.io/interview-skills/ui/?lang=en)**
 
 <img src="assets/interview-banner1.png" alt="Interview Skills AI Mock Interview Coach for interview preparation" width="100%">
 
