@@ -11,6 +11,10 @@ This repository is designed for interview preparation, job interview practice, r
 [![Version](https://img.shields.io/badge/version-1.0.0-green)]()
 [![License](https://img.shields.io/badge/license-MIT-orange)]()
 
+**Live Demo: [Interview Skills AI Mock Interview Coach](https://jennifer88huang.github.io/interview-skills/)**
+
+**Web App: [Start a mock interview from JD and resume](https://jennifer88huang.github.io/interview-skills/ui/)**
+
 <img src="assets/interview-banner1.png" alt="Interview Skills AI Mock Interview Coach for interview preparation" width="100%">
 
 [News](#news) · [Quick Start](#quick-start) · [What It Does](#what-it-does) · [Supported Companies](#supported-companies) · [Example Prompts](#example-prompts) · [Repository Structure](#repository-structure)

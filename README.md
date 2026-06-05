@@ -11,6 +11,10 @@ Interview Skills is an AI mock interview coach for job seekers. It generates tar
 [![Version](https://img.shields.io/badge/version-1.0.0-green)]()
 [![License](https://img.shields.io/badge/license-MIT-orange)]()
 
+**Live Demo / 在线体验： [Interview Skills AI Mock Interview Coach](https://jennifer88huang.github.io/interview-skills/)**
+
+**GitHub Pages UI： [Start a mock interview from JD and resume](https://jennifer88huang.github.io/interview-skills/ui/)**
+
 <img src="assets/interview-banner1.png" alt="Interview Skills AI Mock Interview Coach" width="100%">
 
 *"面经是别人的经历，JD 是你要面的岗位，简历是你走过的路。"*<br>
