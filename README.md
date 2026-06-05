@@ -1,12 +1,12 @@
 <div align="center">
 
-# Interview Skills - AI Mock Interview Coach
+# Big Tech AI Mock Interviewer Skill
 
-## 大厂 AI 模拟面试官 Skill
+**大厂 AI 模拟面试官 Skill**
 
-> AI mock interview coach for interview preparation. Generate personalized interview questions from a real `JD + resume`, practice follow-up questions, and prepare for technical interviews, HR interviews, salary negotiation, FAANG interviews, and Big Tech interviews.
->
-> 大厂 AI 模拟面试官：基于 `JD + 简历` 生成专属面试问题，模拟更接近真实大厂风格的技术面、HR 面与薪资谈判。现已支持国内大厂与海外大厂。
+Interview Skills is an AI mock interview coach for job seekers. It generates targeted mock interview questions from a real job description and a candidate resume. This skill simulates company-specific interview styles across technical rounds, behavioral rounds, HR interviews, salary negotiation, and full multi-round interview loops.
+
+大厂 AI 模拟面试官：基于 `JD + 简历` 生成专属面试问题，模拟更接近真实大厂风格的技术面、HR 面与薪资谈判。现已支持国内外大厂，如字节、腾讯、阿里、美团、Google、Meta、Amazon、Microsoft 等。
 
 [![Version](https://img.shields.io/badge/version-1.0.0-green)]()
 [![License](https://img.shields.io/badge/license-MIT-orange)]()
@@ -14,7 +14,7 @@
 <img src="assets/interview-banner1.png" alt="Interview Skills AI Mock Interview Coach" width="100%">
 
 *"面经是别人的经历，JD 是你要面的岗位，简历是你走过的路。"*<br>
-Interview Skills is an AI mock interview coach for job seekers. It generates personalized interview questions from a job description and resume, simulates follow-up questions, and helps users prepare for technical interviews, HR interviews, salary negotiation, and Big Tech / FAANG interviews.<br>
+
 这个 Skill 不是给你一套通用题库，而是根据你的目标岗位和个人背景，生成更像真实面试官会问的问题。<br>
 不仅出题，还会分析 `JD vs 简历匹配度`、识别简历薄弱点，并支持追问、HR 面和谈薪模拟。
 
