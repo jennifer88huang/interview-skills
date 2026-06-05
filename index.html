@@ -70,16 +70,13 @@
       }
 
       main {
-        max-width: 1120px;
+        max-width: 1220px;
         margin: 0 auto;
-        padding: 40px 20px 56px;
+        padding: 44px 20px 56px;
       }
 
       .hero {
-        display: grid;
-        grid-template-columns: minmax(0, 1.04fr) minmax(320px, 0.96fr);
-        gap: 32px;
-        align-items: center;
+        max-width: 880px;
       }
 
       .eyebrow {
@@ -102,7 +99,7 @@
         margin: 18px 0 0;
         color: var(--muted);
         font-size: 19px;
-        max-width: 720px;
+        max-width: 820px;
       }
 
       .actions {
@@ -137,10 +134,22 @@
 
       .screenshot {
         width: 100%;
+        height: auto;
         border: 1px solid var(--line);
         border-radius: 8px;
         background: var(--panel);
         box-shadow: 0 18px 48px rgba(25, 37, 51, 0.12);
+      }
+
+      .feature-showcase {
+        display: grid;
+        grid-template-columns: minmax(280px, 0.42fr) minmax(520px, 0.58fr);
+        gap: 28px;
+        align-items: start;
+      }
+
+      .feature-copy {
+        min-width: 0;
       }
 
       section {
@@ -158,6 +167,12 @@
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 16px;
+      }
+
+      .feature-list {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 14px;
       }
 
       .card {
@@ -183,6 +198,10 @@
         margin-top: 16px;
       }
 
+      .showcase-media {
+        min-width: 0;
+      }
+
       .repo {
         border-left: 4px solid var(--warm);
       }
@@ -192,7 +211,7 @@
           padding-top: 28px;
         }
 
-        .hero,
+        .feature-showcase,
         .grid {
           grid-template-columns: 1fr;
         }
@@ -204,7 +223,7 @@
       <section class="hero" aria-labelledby="page-title">
         <div>
           <p class="eyebrow">Interview Skills</p>
-          <h1 id="page-title">AI Mock Interview Coach for Interview Preparation</h1>
+          <h1 id="page-title">AI Mock Interview Coach</h1>
           <p class="lead">
             Generate personalized mock interview questions from a real job description and resume. Practice follow-up
             questions for coding interviews, system design interviews, behavioral interviews, HR interviews, salary
@@ -216,34 +235,38 @@
             <a class="button secondary" href="https://github.com/jennifer88huang/interview-skills/blob/main/README-en.md">English README</a>
           </div>
         </div>
-        <img
-          class="screenshot"
-          src="./assets/mock-interview-ui-en.png"
-          alt="Interview Skills browser UI for AI mock interview preparation from JD and resume"
-        />
       </section>
 
-      <section aria-labelledby="features-title">
-        <h2 id="features-title">What Interview Skills Does</h2>
-        <div class="grid">
-          <article class="card">
-            <h3>JD and Resume Analysis</h3>
-            <p>Compare the job description against the resume to find strengths, gaps, risks, and likely follow-up areas.</p>
-          </article>
-          <article class="card">
-            <h3>Personalized Interview Questions</h3>
-            <p>Generate tailored mock interview questions with difficulty, evaluation points, answer hints, and follow-up paths.</p>
-          </article>
-          <article class="card">
-            <h3>Big Tech Interview Practice</h3>
-            <p>Prepare for Google, Meta, Amazon, AWS, Microsoft, ByteDance, Tencent, Alibaba, and other company-specific interviews.</p>
-          </article>
+      <section class="feature-showcase" aria-labelledby="features-title">
+        <div class="feature-copy">
+          <h2 id="features-title">What Interview Skills Does</h2>
+          <div class="feature-list">
+            <article class="card">
+              <h3>JD and Resume Analysis</h3>
+              <p>Compare the job description against the resume to find strengths, gaps, risks, and likely follow-up areas.</p>
+            </article>
+            <article class="card">
+              <h3>Personalized Interview Questions</h3>
+              <p>Generate tailored mock interview questions with difficulty, evaluation points, answer hints, and follow-up paths.</p>
+            </article>
+            <article class="card">
+              <h3>Big Tech Interview Practice</h3>
+              <p>Prepare for Google, Meta, Amazon, AWS, Microsoft, ByteDance, Tencent, Alibaba, and other company-specific interviews.</p>
+            </article>
+          </div>
+          <p class="keywords">
+            Search topics: AI mock interview, interview preparation, interview questions, resume-based interview coaching,
+            JD analysis, FAANG interview preparation, coding interview, system design interview, behavioral interview,
+            HR interview, salary negotiation, and Big Tech interview practice.
+          </p>
         </div>
-        <p class="keywords">
-          Search topics: AI mock interview, interview preparation, interview questions, resume-based interview coaching,
-          JD analysis, FAANG interview preparation, coding interview, system design interview, behavioral interview,
-          HR interview, salary negotiation, and Big Tech interview practice.
-        </p>
+        <div class="showcase-media">
+          <img
+            class="screenshot"
+            src="./assets/mock-interview-ui-en.png"
+            alt="Interview Skills browser UI for AI mock interview preparation from JD and resume"
+          />
+        </div>
       </section>
 
       <section aria-labelledby="links-title">
