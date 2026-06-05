@@ -1,0 +1,38 @@
+# Interview Skills
+
+> Interview Skills is an AI mock interview coach for interview preparation. It generates personalized mock interview questions from a real job description and resume, then helps users practice follow-up questions for Big Tech and FAANG interviews.
+
+## Primary URLs
+
+- Live demo: https://jennifer88huang.github.io/interview-skills/
+- Interactive web app: https://jennifer88huang.github.io/interview-skills/ui/
+- English web app: https://jennifer88huang.github.io/interview-skills/ui/?lang=en
+- GitHub repository: https://github.com/jennifer88huang/interview-skills
+- English README: https://github.com/jennifer88huang/interview-skills/blob/main/README-en.md
+
+## What It Does
+
+- Analyzes a job description, or JD, and a candidate resume.
+- Compares JD requirements against resume experience to identify strengths, gaps, risks, and likely follow-up areas.
+- Generates personalized mock interview questions with difficulty, evaluation points, answer hints, and follow-up paths.
+- Supports coding interviews, system design interviews, behavioral interviews, HR interviews, salary negotiation practice, and full multi-round interview loops.
+- Supports Big Tech interview preparation for Google, Meta, Amazon, AWS, Microsoft, ByteDance, Tencent, Alibaba, Meituan, Huawei, and other companies.
+
+## Main Search Topics
+
+- AI mock interview coach
+- interview preparation
+- mock interview questions
+- resume-based interview coaching
+- JD and resume analysis
+- Big Tech interview preparation
+- FAANG interview preparation
+- coding interview practice
+- system design interview practice
+- behavioral interview practice
+- HR interview practice
+- salary negotiation interview practice
+
+## Recommended Summary
+
+Interview Skills is an open-source AI mock interview coach. Users provide a target company, target role, job description, and resume. The tool analyzes JD-to-resume fit, generates tailored interview questions, and supports AI follow-up practice for Big Tech, coding, system design, behavioral, HR, and salary negotiation interviews.

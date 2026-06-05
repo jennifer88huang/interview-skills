@@ -26,16 +26,36 @@
       content="AI mock interview coach for JD and resume-based Big Tech interview practice."
     />
     <meta name="twitter:image" content="https://jennifer88huang.github.io/interview-skills/assets/mock-interview-ui-en.png" />
+    <link rel="alternate" type="text/plain" href="https://jennifer88huang.github.io/interview-skills/llms.txt" title="LLMs.txt" />
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "WebApplication",
+        "@type": ["WebApplication", "SoftwareApplication"],
         "name": "Interview Skills",
         "alternateName": "AI Mock Interview Coach",
         "applicationCategory": "EducationalApplication",
         "operatingSystem": "Web",
         "url": "https://jennifer88huang.github.io/interview-skills/",
         "sameAs": "https://github.com/jennifer88huang/interview-skills",
+        "image": "https://jennifer88huang.github.io/interview-skills/assets/mock-interview-ui-en.png",
+        "screenshot": "https://jennifer88huang.github.io/interview-skills/assets/mock-interview-ui-en.png",
+        "keywords": [
+          "AI mock interview",
+          "interview preparation",
+          "mock interview questions",
+          "JD and resume analysis",
+          "Big Tech interview",
+          "FAANG interview preparation",
+          "coding interview",
+          "system design interview",
+          "behavioral interview"
+        ],
+        "featureList": [
+          "Generate personalized mock interview questions from a job description and resume",
+          "Analyze JD and resume match, gaps, risks, and follow-up areas",
+          "Practice follow-up questions for coding, system design, behavioral, HR, and salary negotiation interviews",
+          "Support Big Tech interview practice for Google, Meta, Amazon, AWS, Microsoft, ByteDance, Tencent, Alibaba, and Meituan"
+        ],
         "description": "AI mock interview coach for interview preparation. Generate personalized mock interview questions from a job description and resume, then practice follow-up questions, coding interviews, system design interviews, behavioral interviews, HR interviews, salary negotiation, and Big Tech interviews.",
         "offers": {
           "@type": "Offer",
@@ -206,13 +226,49 @@
         border-left: 4px solid var(--warm);
       }
 
+      .steps {
+        counter-reset: step;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .step {
+        position: relative;
+      }
+
+      .step::before {
+        counter-increment: step;
+        content: counter(step);
+        display: inline-grid;
+        width: 28px;
+        height: 28px;
+        margin-bottom: 12px;
+        place-items: center;
+        border-radius: 999px;
+        background: #e7f3f1;
+        color: var(--accent-dark);
+        font-weight: 800;
+      }
+
+      .text-list {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px 18px;
+        margin: 0;
+        padding-left: 20px;
+        color: var(--muted);
+      }
+
       @media (max-width: 860px) {
         main {
           padding-top: 28px;
         }
 
         .feature-showcase,
-        .grid {
+        .grid,
+        .steps,
+        .text-list {
           grid-template-columns: 1fr;
         }
       }
@@ -267,6 +323,38 @@
             alt="Interview Skills browser UI for AI mock interview preparation from JD and resume"
           />
         </div>
+      </section>
+
+      <section aria-labelledby="workflow-title">
+        <h2 id="workflow-title">How It Works</h2>
+        <div class="steps">
+          <article class="card step">
+            <h3>Add the target role</h3>
+            <p>Enter the target company, role, interview round, and interview mode.</p>
+          </article>
+          <article class="card step">
+            <h3>Provide JD and resume</h3>
+            <p>Paste text or upload files so the coach can compare role requirements with candidate experience.</p>
+          </article>
+          <article class="card step">
+            <h3>Generate questions</h3>
+            <p>Get personalized mock interview questions with evaluation points and answer direction.</p>
+          </article>
+          <article class="card step">
+            <h3>Practice follow-ups</h3>
+            <p>Answer a question and continue with AI follow-up drills based on your response.</p>
+          </article>
+        </div>
+      </section>
+
+      <section aria-labelledby="use-cases-title">
+        <h2 id="use-cases-title">Interview Practice Use Cases</h2>
+        <ul class="text-list">
+          <li>Big Tech and FAANG interview preparation for Google, Meta, Amazon, AWS, Microsoft, ByteDance, Tencent, Alibaba, and Meituan.</li>
+          <li>Coding interview, system design interview, behavioral interview, HR interview, and salary negotiation practice.</li>
+          <li>Resume-based interview coaching that identifies weak spots, project risks, and likely interviewer follow-up questions.</li>
+          <li>Job description analysis for backend, frontend, AI/ML, data, product, operations, and business roles.</li>
+        </ul>
       </section>
 
       <section aria-labelledby="links-title">
