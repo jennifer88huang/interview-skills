@@ -1,10 +1,27 @@
-# Big Tech AI Mock Interviewer Skill
+<div align="center">
 
-Generate targeted mock interview questions from a real job description and a candidate resume. This skill simulates company-specific interview styles across technical rounds, behavioral rounds, HR interviews, salary negotiation, and full multi-round interview loops.
+# Interview Skills - AI Mock Interview Coach
+
+**Big Tech AI Mock Interviewer Skill**
+
+Interview Skills is an AI mock interview coach for job seekers, engineers, product managers, students, and career switchers. It generates personalized mock interview questions from a real job description and a candidate resume, then helps users practice follow-up questions, technical interviews, coding interviews, system design interviews, behavioral interviews, HR interviews, salary negotiation, and full multi-round interview loops.
+
+This repository is designed for interview preparation, job interview practice, resume-based interview coaching, JD analysis, FAANG interview preparation, Big Tech interview preparation, and company-specific mock interviews for Google, Meta, Amazon, AWS, Microsoft, ByteDance, Tencent, Alibaba, Meituan, Huawei, and more.
+
+[![Version](https://img.shields.io/badge/version-1.0.0-green)]()
+[![License](https://img.shields.io/badge/license-MIT-orange)]()
+
+<img src="assets/interview-banner1.png" alt="Interview Skills AI Mock Interview Coach for interview preparation" width="100%">
+
+[News](#news) · [Quick Start](#quick-start) · [What It Does](#what-it-does) · [Supported Companies](#supported-companies) · [Example Prompts](#example-prompts) · [Repository Structure](#repository-structure)
+
+</div>
+
+---
 
 ## News
 
-- **2026-06-04**: Added a browser-based Mock Interview UI and enable users to mock interview process with provied JD and resume.
+- **2026-06-04**: Added a browser-based Mock Interview UI where users can enter a JD and resume, generate a personalized interview simulation, answer questions, and practice follow-up questions online.
 - **2026-06-01**: Added `install-skill.sh`, allowing terminal users to run `bash install-skill.sh https://github.com/jennifer88huang/interview-skills.git` from the repository root.
 - **2026-05-28**: Added global big tech interview support for Google, Meta, Amazon/AWS, Microsoft, and related scenarios. 
 - **2026-04-24**: Added HR interview drills, salary negotiation scripts, and full multi-round interview flow simulation. 
@@ -12,13 +29,13 @@ Generate targeted mock interview questions from a real job description and a can
 
 ## What It Does
 
-- Parses the target JD into hard skills, soft skills, and hidden evaluation signals.
-- Parses the resume to identify strengths, project evidence, risks, and likely follow-up areas.
+- Parses the target job description, or JD, into hard skills, soft skills, and hidden evaluation signals.
+- Parses the resume to identify strengths, project evidence, risks, weak spots, and likely follow-up areas.
 - Compares JD requirements against the resume and highlights strong matches, gaps, and weak spots.
-- Generates 10 tailored interview questions with difficulty, evaluation points, answer hints, and follow-up directions.
+- Generates 10 tailored mock interview questions with difficulty, evaluation points, answer hints, and follow-up directions.
 - Supports interactive follow-up: answer a question, then ask the AI interviewer to dig deeper.
 - Provides good-answer vs bad-answer comparisons for selected questions.
-- Supports HR interview drills, salary negotiation scripts, and full multi-round interview simulations.
+- Supports coding interview practice, system design interview practice, behavioral interview practice, HR interview drills, salary negotiation scripts, and full multi-round interview simulations.
 
 ## Supported Companies
 
@@ -50,12 +67,11 @@ https://jennifer88huang.github.io/interview-skills/ui/?lang=en
 
 The browser UI supports a full interactive practice loop:
 
-1. Fill in the target company, target role, and interview round on the left panel.
-2. Enter the JD in the center panel by pasting a link, text, or uploading a PDF, Word, TXT, or Markdown file.
-3. Provide your resume in the center panel. You can upload your resume file or paste resume content manually. 
-4. In the lower-left AI Engine section, choose a model provider and model, and paste your API key.   
-   When you provide a key, the simulation process goes with live questions and follow-ups. If you do not provide API key, the page uses local simulation.
-6. Click **Start Mock Interview** in the lower-left section, answer the question in the **Result** panel in the right. Click **Generate Follow-up** or **Next Question** based on your requirement. 
+1. Fill in the target company, target role, and interview round in the left Interview Setup panel.
+2. Enter the JD in the center JD Content area by pasting a link, pasting text, or uploading a PDF, Word, TXT, or Markdown file.
+3. Provide your resume in the center Resume Content area. You can upload a PDF, Word, image, TXT, or Markdown file, or paste resume content manually.
+4. In the lower-left AI Engine section, choose a model provider and model, then paste your API key. When you provide a key, the page generates live interview questions and follow-ups; without a key, it uses local simulation.
+5. Click **Start Mock Interview**. The Result panel shows the JD-vs-resume match analysis and interview questions. Click **Generate Follow-up** or **Next Question** depending on how you want to practice.
 
 The top progress indicator moves through Input Materials, Generate Interview, and Follow-up Practice. Use the top-right language button to switch between English and Chinese.
 
