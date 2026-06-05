@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://jennifer88huang.github.io/interview-skills/sitemap.xml

@@ -1,39 +1,268 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta http-equiv="refresh" content="0; url=./ui/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Interview Skills - AI Mock Interview Coach</title>
+    <title>Interview Skills - AI Mock Interview Coach for Interview Preparation</title>
     <meta
       name="description"
-      content="AI mock interview coach for interview preparation. Generate personalized interview questions from JD and resume, practice follow-up questions, HR interviews, salary negotiation, and FAANG interviews."
+      content="Interview Skills is an AI mock interview coach for interview preparation. Generate personalized mock interview questions from a JD and resume, then practice follow-up questions, coding interviews, system design interviews, behavioral interviews, HR interviews, salary negotiation, and Big Tech interviews."
     />
+    <meta name="robots" content="index,follow" />
+    <link rel="canonical" href="https://jennifer88huang.github.io/interview-skills/" />
     <meta property="og:title" content="Interview Skills - AI Mock Interview Coach" />
     <meta
       property="og:description"
-      content="Generate personalized mock interview questions from a real JD and resume, then practice follow-up questions for Big Tech and FAANG interviews."
+      content="Generate personalized mock interview questions from a real JD and resume, then practice follow-up questions for Big Tech, FAANG, coding, system design, behavioral, HR, and salary negotiation interviews."
     />
     <meta property="og:type" content="website" />
-    <link rel="canonical" href="./ui/" />
+    <meta property="og:url" content="https://jennifer88huang.github.io/interview-skills/" />
+    <meta property="og:image" content="https://jennifer88huang.github.io/interview-skills/assets/mock-interview-ui-en.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Interview Skills - AI Mock Interview Coach" />
+    <meta
+      name="twitter:description"
+      content="AI mock interview coach for interview preparation from JD and resume, with follow-up practice for Big Tech and FAANG interviews."
+    />
+    <meta name="twitter:image" content="https://jennifer88huang.github.io/interview-skills/assets/mock-interview-ui-en.png" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Interview Skills",
+        "alternateName": "AI Mock Interview Coach",
+        "applicationCategory": "EducationalApplication",
+        "operatingSystem": "Web",
+        "url": "https://jennifer88huang.github.io/interview-skills/",
+        "sameAs": "https://github.com/jennifer88huang/interview-skills",
+        "description": "AI mock interview coach for interview preparation. Generate personalized mock interview questions from a job description and resume, then practice follow-up questions, coding interviews, system design interviews, behavioral interviews, HR interviews, salary negotiation, and Big Tech interviews.",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      }
+    </script>
     <style>
+      :root {
+        color-scheme: light;
+        --ink: #17202a;
+        --muted: #516070;
+        --line: #d9e0e7;
+        --panel: #ffffff;
+        --bg: #f5f7fa;
+        --accent: #0f766e;
+        --accent-dark: #0b5c56;
+        --warm: #b45309;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
       body {
         margin: 0;
-        min-height: 100vh;
-        display: grid;
-        place-items: center;
-        background: #f6f7f9;
-        color: #15202b;
+        background: var(--bg);
+        color: var(--ink);
         font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.6;
+      }
+
+      main {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 40px 20px 56px;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.04fr) minmax(320px, 0.96fr);
+        gap: 32px;
+        align-items: center;
+      }
+
+      .eyebrow {
+        margin: 0 0 12px;
+        color: var(--accent-dark);
+        font-size: 14px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0;
+        max-width: 760px;
+        font-size: clamp(36px, 6vw, 64px);
+        line-height: 1.04;
+        letter-spacing: 0;
+      }
+
+      .lead {
+        margin: 18px 0 0;
+        color: var(--muted);
+        font-size: 19px;
+        max-width: 720px;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 26px;
       }
 
       a {
-        color: #0f766e;
+        color: var(--accent-dark);
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        padding: 10px 16px;
+        border: 1px solid var(--accent);
+        border-radius: 6px;
+        background: var(--accent);
+        color: #fff;
         font-weight: 700;
+        text-decoration: none;
+      }
+
+      .button.secondary {
+        background: transparent;
+        color: var(--accent-dark);
+      }
+
+      .screenshot {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        box-shadow: 0 18px 48px rgba(25, 37, 51, 0.12);
+      }
+
+      section {
+        margin-top: 42px;
+      }
+
+      h2 {
+        margin: 0 0 14px;
+        font-size: 28px;
+        line-height: 1.2;
+        letter-spacing: 0;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 18px;
+      }
+
+      .card h3 {
+        margin: 0 0 8px;
+        font-size: 18px;
+      }
+
+      .card p,
+      .keywords,
+      .note {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .keywords {
+        margin-top: 16px;
+      }
+
+      .repo {
+        border-left: 4px solid var(--warm);
+      }
+
+      @media (max-width: 860px) {
+        main {
+          padding-top: 28px;
+        }
+
+        .hero,
+        .grid {
+          grid-template-columns: 1fr;
+        }
       }
     </style>
   </head>
   <body>
-    <p>正在打开 <a href="./ui/">AI 模拟面试官</a>...</p>
+    <main>
+      <section class="hero" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">Interview Skills</p>
+          <h1 id="page-title">AI Mock Interview Coach for Interview Preparation</h1>
+          <p class="lead">
+            Generate personalized mock interview questions from a real job description and resume. Practice follow-up
+            questions for coding interviews, system design interviews, behavioral interviews, HR interviews, salary
+            negotiation, FAANG interviews, and Big Tech interviews.
+          </p>
+          <div class="actions">
+            <a class="button" href="./ui/">Start Mock Interview</a>
+            <a class="button secondary" href="https://github.com/jennifer88huang/interview-skills">GitHub Repository</a>
+            <a class="button secondary" href="./README-en.md">English README</a>
+          </div>
+        </div>
+        <img
+          class="screenshot"
+          src="./assets/mock-interview-ui-en.png"
+          alt="Interview Skills browser UI for AI mock interview preparation from JD and resume"
+        />
+      </section>
+
+      <section aria-labelledby="features-title">
+        <h2 id="features-title">What Interview Skills Does</h2>
+        <div class="grid">
+          <article class="card">
+            <h3>JD and Resume Analysis</h3>
+            <p>Compare the job description against the resume to find strengths, gaps, risks, and likely follow-up areas.</p>
+          </article>
+          <article class="card">
+            <h3>Personalized Interview Questions</h3>
+            <p>Generate tailored mock interview questions with difficulty, evaluation points, answer hints, and follow-up paths.</p>
+          </article>
+          <article class="card">
+            <h3>Big Tech Interview Practice</h3>
+            <p>Prepare for Google, Meta, Amazon, AWS, Microsoft, ByteDance, Tencent, Alibaba, and other company-specific interviews.</p>
+          </article>
+        </div>
+        <p class="keywords">
+          Search topics: AI mock interview, interview preparation, interview questions, resume-based interview coaching,
+          JD analysis, FAANG interview preparation, coding interview, system design interview, behavioral interview,
+          HR interview, salary negotiation, and Big Tech interview practice.
+        </p>
+      </section>
+
+      <section aria-labelledby="links-title">
+        <h2 id="links-title">Project Links</h2>
+        <div class="grid">
+          <article class="card repo">
+            <h3>Use the Web App</h3>
+            <p><a href="./ui/">Open the interactive mock interview UI</a></p>
+          </article>
+          <article class="card repo">
+            <h3>Read the Source</h3>
+            <p><a href="https://github.com/jennifer88huang/interview-skills">View interview-skills on GitHub</a></p>
+          </article>
+          <article class="card repo">
+            <h3>Install the Skill</h3>
+            <p><a href="https://github.com/jennifer88huang/interview-skills#-%E5%BF%AB%E9%80%9F%E5%BC%80%E5%A7%8B">Install from the README</a></p>
+          </article>
+        </div>
+        <p class="note">Also available in Chinese as 大厂 AI 模拟面试官 Skill.</p>
+      </section>
+    </main>
   </body>
 </html>
