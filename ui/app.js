@@ -1588,7 +1588,7 @@ async function parseTextFile(file) {
 let pdfWorkerReady = null;
 
 function getPdfWorkerUrl() {
-  return new URL("./vendor/pdf.worker.min.js", window.location.href).href.split("?")[0];
+  return new URL("./lib/pdf.worker.min.js", window.location.href).href.split("?")[0];
 }
 
 async function ensurePdfWorker() {
@@ -1622,7 +1622,7 @@ async function ensurePdfWorker() {
     }
 
     if (!workerText.trim()) {
-      throw new Error(localize("PDF worker 文件为空，请确认 ui/vendor/pdf.worker.min.js 存在。", "PDF worker file is empty. Ensure ui/vendor/pdf.worker.min.js exists."));
+      throw new Error(localize("PDF worker 文件为空，请确认 ui/lib/pdf.worker.min.js 存在。", "PDF worker file is empty. Ensure ui/lib/pdf.worker.min.js exists."));
     }
 
     const blob = new Blob([workerText], { type: "text/javascript" });
