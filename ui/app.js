@@ -2042,6 +2042,58 @@ ${transcript || "暂无"}
 `.trim();
 }
 
+function parseFollowupFeedback(feedbackText) {
+  if (!feedbackText) return null;
+  const strengthMatch = feedbackText.match(/(?:优点|Strength)[：:]\s*([^；;]+)/i);
+  const gapMatch = feedbackText.match(/(?:需补强|Improve(?:ment)?(?: point)?|Gap)[：:]\s*(.+)/i);
+  if (strengthMatch || gapMatch) {
+    return {
+      strength: strengthMatch ? strengthMatch[1].trim() : "",
+      gap: gapMatch ? gapMatch[1].trim() : "",
+    };
+  }
+  return { raw: feedbackText };
+}
+
+function appendFollowupFeedbackBlock(parent, feedbackText) {
+  if (!feedbackText) return;
+  const parsed = parseFollowupFeedback(feedbackText);
+  const block = document.createElement("div");
+  block.className = "followup-block followup-feedback";
+  const label = document.createElement("span");
+  label.className = "followup-block-label";
+  label.textContent = localize("反馈", "Feedback");
+  block.append(label);
+
+  if (parsed?.raw) {
+    const text = document.createElement("p");
+    text.className = "followup-feedback-text";
+    text.textContent = parsed.raw;
+    block.append(text);
+  } else if (parsed) {
+    const list = document.createElement("div");
+    list.className = "followup-feedback-points";
+    if (parsed.strength) {
+      const point = document.createElement("p");
+      point.className = "followup-feedback-point";
+      const title = document.createElement("strong");
+      title.textContent = localize("优点", "Strength");
+      point.append(title, document.createTextNode(` — ${parsed.strength}`));
+      list.append(point);
+    }
+    if (parsed.gap) {
+      const point = document.createElement("p");
+      point.className = "followup-feedback-point";
+      const title = document.createElement("strong");
+      title.textContent = localize("需补强", "Improve");
+      point.append(title, document.createTextNode(` — ${parsed.gap}`));
+      list.append(point);
+    }
+    block.append(list);
+  }
+  parent.append(block);
+}
+
 function renderInterviewStage() {
   interviewStage.replaceChildren();
 
@@ -2096,45 +2148,80 @@ function renderInterviewStage() {
   actions.append(followupButton, nextButton);
   card.append(meta, title, body, answer, actions);
 
-  followups.forEach((followupItem, followupIndex) => {
-    const followup = document.createElement("div");
-    const followupTitle = document.createElement("strong");
-    const followupQuestion = document.createElement("p");
-    followup.className = "inline-followup";
-    followupTitle.textContent = `${localize("追问", "Follow-up")} ${followupIndex + 1}`;
-    followupQuestion.textContent = followupItem.question;
-    followup.append(followupTitle, followupQuestion);
+  if (followups.length) {
+    const thread = document.createElement("section");
+    const threadHeader = document.createElement("div");
+    const list = document.createElement("div");
+    thread.className = "followup-thread";
+    threadHeader.className = "followup-thread-header";
+    threadHeader.textContent = localize("追问记录", "Follow-up Thread");
+    list.className = "followup-list";
 
-    if (followupIndex === followups.length - 1) {
-      const followupAnswer = document.createElement("textarea");
-      const followupActions = document.createElement("div");
-      const continueButton = document.createElement("button");
-      followupAnswer.id = "currentFollowupAnswer";
-      followupAnswer.className = "answer-input";
-      followupAnswer.placeholder = localize("输入你对追问的回答，然后点击继续追问", "Answer this follow-up, then continue probing");
-      followupAnswer.value = followupItem.answer || "";
-      followupAnswer.disabled = state.isLoading;
-      followupActions.className = "question-actions";
-      continueButton.type = "button";
-      continueButton.id = "continueFollowupButton";
-      continueButton.textContent = localize("继续追问", "Continue Follow-up");
-      continueButton.disabled = state.isLoading;
-      continueButton.addEventListener("click", () => handleFollowup(true, continueButton));
-      followupActions.append(continueButton);
-      followup.append(followupAnswer, followupActions);
-    } else if (followupItem.answer) {
-      const answered = document.createElement("p");
-      answered.textContent = `${localize("回答：", "Answer: ")}${followupItem.answer}`;
-      followup.append(answered);
-    }
+    followups.forEach((followupItem, followupIndex) => {
+      const isActive = followupIndex === followups.length - 1;
+      const item = document.createElement("article");
+      const header = document.createElement("div");
+      const badge = document.createElement("span");
+      const questionBlock = document.createElement("div");
+      const questionLabel = document.createElement("span");
+      const questionText = document.createElement("p");
 
-    if (followupItem.feedback) {
-      const feedback = document.createElement("p");
-      feedback.textContent = `${localize("反馈：", "Feedback: ")}${followupItem.feedback}`;
-      followup.append(feedback);
-    }
-    card.append(followup);
-  });
+      item.className = `followup-item${isActive ? " is-active" : " is-completed"}`;
+      header.className = "followup-item-header";
+      badge.className = "followup-badge";
+      badge.textContent = `${localize("追问", "Follow-up")} ${followupIndex + 1}`;
+      questionBlock.className = "followup-block followup-question";
+      questionLabel.className = "followup-block-label";
+      questionLabel.textContent = localize("面试官", "Interviewer");
+      questionText.textContent = followupItem.question;
+
+      header.append(badge);
+      questionBlock.append(questionLabel, questionText);
+      item.append(header, questionBlock);
+
+      if (isActive) {
+        const answerBlock = document.createElement("div");
+        const answerLabel = document.createElement("span");
+        const followupAnswer = document.createElement("textarea");
+        const followupActions = document.createElement("div");
+        const continueButton = document.createElement("button");
+        answerBlock.className = "followup-block followup-answer-editor";
+        answerLabel.className = "followup-block-label";
+        answerLabel.textContent = localize("你的回答", "Your Answer");
+        followupAnswer.id = "currentFollowupAnswer";
+        followupAnswer.className = "answer-input";
+        followupAnswer.placeholder = localize("输入你对追问的回答，然后点击继续追问", "Answer this follow-up, then continue probing");
+        followupAnswer.value = followupItem.answer || "";
+        followupAnswer.disabled = state.isLoading;
+        followupActions.className = "question-actions";
+        continueButton.type = "button";
+        continueButton.id = "continueFollowupButton";
+        continueButton.textContent = localize("继续追问", "Continue Follow-up");
+        continueButton.disabled = state.isLoading;
+        continueButton.addEventListener("click", () => handleFollowup(true, continueButton));
+        followupActions.append(continueButton);
+        answerBlock.append(answerLabel, followupAnswer, followupActions);
+        item.append(answerBlock);
+      } else if (followupItem.answer) {
+        const answerBlock = document.createElement("div");
+        const answerLabel = document.createElement("span");
+        const answerText = document.createElement("p");
+        answerBlock.className = "followup-block followup-answer";
+        answerLabel.className = "followup-block-label";
+        answerLabel.textContent = localize("你的回答", "Your Answer");
+        answerText.textContent = followupItem.answer;
+        answerBlock.append(answerLabel, answerText);
+        item.append(answerBlock);
+      }
+
+      appendFollowupFeedbackBlock(item, followupItem.feedback);
+
+      list.append(item);
+    });
+
+    thread.append(threadHeader, list);
+    card.append(thread);
+  }
 
   interviewStage.append(card);
   if (interviewState) {
