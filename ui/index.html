@@ -92,6 +92,7 @@
         <div class="session-bar-main">
           <div class="context-bar-info" id="contextBarInfo"></div>
           <div class="session-bar-actions">
+            <button type="button" class="context-bar-btn hidden" id="backToSummaryBtn">返回复盘</button>
             <button type="button" class="context-bar-btn" id="editMaterialsBtn">编辑材料</button>
             <button type="button" class="context-bar-btn" id="openMaterialsDrawerBtn">材料▾</button>
           </div>
@@ -411,9 +412,14 @@
       </div>
     </dialog>
 
-    <dialog class="confirm-dialog" id="regenerateConfirm">
-      <h2>重新生成面试题？</h2>
-      <p id="regenerateConfirmText">当前答题进度将被覆盖，此操作不可撤销。</p>
+    <dialog class="confirm-dialog" id="regenerateConfirm" aria-labelledby="regenerateConfirmTitle">
+      <div class="confirm-dialog-head">
+        <h2 id="regenerateConfirmTitle">重新生成面试题？</h2>
+        <button type="button" class="icon-button" id="regenerateConfirmClose" aria-label="关闭">×</button>
+      </div>
+      <div class="confirm-dialog-body">
+        <p id="regenerateConfirmText">将开启新会话并重新生成题目，当前会话的答题进度不会保留。已自动保存的历史记录仍可在「历史」中查看。</p>
+      </div>
       <div class="confirm-dialog-actions">
         <button type="button" class="secondary-action" id="regenerateCancelBtn">取消</button>
         <button type="button" class="primary-action" id="regenerateConfirmBtn">确认重新生成</button>
@@ -437,6 +443,6 @@
     <script src="./vendor/pdf.min.js"></script>
     <script src="https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js"></script>
     <script src="./storage.js?v=20260618-engine-prefs"></script>
-    <script src="./app.js?v=20260618-followup-ui2"></script>
+    <script src="./app.js?v=20260618-completed-session"></script>
   </body>
 </html>

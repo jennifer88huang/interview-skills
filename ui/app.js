@@ -17,6 +17,7 @@ const state = {
   sessionId: null,
   phase: "materials",
   roundSummary: null,
+  viewingFromSummary: false,
   isLoading: false,
   resultMeta: {
     matchScore: "--",
@@ -63,6 +64,7 @@ const contextBarInfo = document.querySelector("#contextBarInfo");
 const contextBarInsight = document.querySelector("#contextBarInsight");
 const contextBarAnalysisPreview = document.querySelector("#contextBarAnalysisPreview");
 const editMaterialsBtn = document.querySelector("#editMaterialsBtn");
+const backToSummaryBtn = document.querySelector("#backToSummaryBtn");
 const openMaterialsDrawerBtn = document.querySelector("#openMaterialsDrawerBtn");
 const sessionBanner = document.querySelector("#sessionBanner");
 const sessionBannerTitle = document.querySelector("#sessionBannerTitle");
@@ -89,6 +91,7 @@ const drawerSettings = document.querySelector("#drawerSettings");
 const drawerEditMaterialsBtn = document.querySelector("#drawerEditMaterialsBtn");
 const regenerateConfirm = document.querySelector("#regenerateConfirm");
 const regenerateConfirmText = document.querySelector("#regenerateConfirmText");
+const regenerateConfirmClose = document.querySelector("#regenerateConfirmClose");
 const regenerateCancelBtn = document.querySelector("#regenerateCancelBtn");
 const regenerateConfirmBtn = document.querySelector("#regenerateConfirmBtn");
 const toast = document.querySelector("#toast");
@@ -275,6 +278,8 @@ const staticText = {
   "备战洞察": "Interview Fit Analysis",
   "面试匹配分析": "Interview Fit Analysis",
   "编辑材料": "Edit Materials",
+  "返回复盘": "Back to Review",
+  "查看复盘": "View Review",
   "材料▾": "Materials",
   "材料查阅": "View Materials",
   "概览": "Overview",
@@ -285,7 +290,7 @@ const staticText = {
   "继续面试": "Continue Interview",
   "重新生成": "Regenerate",
   "重新生成面试题？": "Regenerate interview questions?",
-  "当前答题进度将被覆盖，此操作不可撤销。": "Your current answers will be overwritten. This cannot be undone.",
+  "将开启新会话并重新生成题目，当前会话的答题进度不会保留。已自动保存的历史记录仍可在「历史」中查看。": "This starts a new session with new questions. Progress in the current session won't be kept. Auto-saved sessions remain available in History.",
   "取消": "Cancel",
   "确认重新生成": "Confirm Regenerate",
   "生成后将在此展示匹配度与备战建议，并进入模拟面试。": "After generation, match score and prep insights will appear here before you enter the mock interview.",
@@ -414,16 +419,39 @@ async function withLoading(button, asyncFn, labels) {
       button.dataset.loading = "false";
       button.textContent = labels.default || defaultLabel;
     }
-    if (state.phase === "interview" && state.questions.length) {
+    if (workspace.dataset.mode === "interview" && state.questions.length) {
       renderInterviewStage();
       renderQuestionRail();
     }
   }
 }
 
+function isSessionComplete() {
+  return Boolean(state.roundSummary);
+}
+
+function updateContextBarActions() {
+  const showBackToSummary = state.viewingFromSummary && isSessionComplete();
+  backToSummaryBtn?.classList.toggle("hidden", !showBackToSummary);
+}
+
+function handleQuestionAdvance(button = null) {
+  if (!state.questions.length || state.isLoading) return;
+  if (!markCurrentTurnDone()) {
+    showToast(localize("请先输入回答再进入下一题。", "Enter an answer before moving to the next question."));
+    return;
+  }
+  if (state.currentIndex === state.questions.length - 1) {
+    completeRound(button, { skipMark: true });
+  } else {
+    advanceToNextQuestion();
+  }
+}
+
 function deriveTurnStatus(turn) {
   if (!turn) return "pending";
   const hasAnswer = Boolean(turn.answer && turn.answer.trim());
+  if (turn.markedComplete && hasAnswer) return "completed";
   const followups = turn.followups || [];
   if (followups.length) return "followed-up";
   if (hasAnswer) return "answered";
@@ -603,6 +631,14 @@ function updatePrimaryActions() {
     return;
   }
 
+  if (isSessionComplete()) {
+    generateButton.textContent = localize("查看复盘", "View Review");
+    if (enterInterviewBtn) {
+      enterInterviewBtn.textContent = localize("查看复盘", "View Review");
+    }
+    return;
+  }
+
   if (progress.answered > 0) {
     generateButton.textContent = localize(`继续面试 · ${progress.label}`, `Continue Interview · ${progress.label}`);
   } else {
@@ -617,10 +653,12 @@ function updatePrimaryActions() {
 }
 
 function isUnfinishedSessionMeta(meta) {
-  if (!meta || meta.phase === "summary") return false;
+  if (!meta || meta.completed || meta.phase === "summary") return false;
   const match = String(meta.progress || "").match(/(\d+)\/(\d+)/);
   if (!match) return meta.phase === "interview";
-  return Number(match[2]) > 0;
+  const answered = Number(match[1]);
+  const total = Number(match[2]);
+  return meta.phase === "interview" && total > 0 && answered < total;
 }
 
 function findResumableSessionMeta(sessions) {
@@ -634,7 +672,7 @@ function findResumableSessionMeta(sessions) {
 }
 
 function renderSessionBanner() {
-  const hasActiveSession = state.questions.length > 0 && state.phase !== "summary";
+  const hasActiveSession = state.questions.length > 0 && !isSessionComplete();
   sessionBanner?.classList.toggle("hidden", !(hasActiveSession && workspace.dataset.mode === "materials"));
   if (!hasActiveSession || workspace.dataset.mode !== "materials" || !sessionBannerTitle || !sessionBannerMeta) return;
 
@@ -653,7 +691,7 @@ function renderSessionBanner() {
 function canNavigateToStep(step) {
   if (step === "materials") return true;
   if (step === "interview") return state.questions.length > 0;
-  if (step === "followup") return state.phase === "summary" && !!state.roundSummary;
+  if (step === "followup") return isSessionComplete();
   return false;
 }
 
@@ -693,27 +731,45 @@ function updateStepNavAvailability() {
 function confirmRegenerate() {
   return new Promise((resolve) => {
     if (!regenerateConfirm) {
-      resolve(window.confirm(localize("当前答题进度将被覆盖，此操作不可撤销。", "Your current answers will be overwritten. This cannot be undone.")));
+      resolve(window.confirm(localize("将开启新会话并重新生成题目，当前会话的答题进度不会保留。已自动保存的历史记录仍可在「历史」中查看。", "This starts a new session with new questions. Progress in the current session won't be kept. Auto-saved sessions remain available in History.")));
       return;
     }
 
+    let settled = false;
+    const finish = (value) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      resolve(value);
+    };
     const onCancel = () => {
       regenerateConfirm.close();
-      cleanup();
-      resolve(false);
+      finish(false);
     };
     const onConfirm = () => {
       regenerateConfirm.close();
-      cleanup();
-      resolve(true);
+      finish(true);
+    };
+    const onBackdrop = (event) => {
+      if (event.target === regenerateConfirm) onCancel();
+    };
+    const onEscape = (event) => {
+      event.preventDefault();
+      onCancel();
     };
     const cleanup = () => {
       regenerateCancelBtn?.removeEventListener("click", onCancel);
       regenerateConfirmBtn?.removeEventListener("click", onConfirm);
+      regenerateConfirmClose?.removeEventListener("click", onCancel);
+      regenerateConfirm.removeEventListener("click", onBackdrop);
+      regenerateConfirm.removeEventListener("cancel", onEscape);
     };
 
     regenerateCancelBtn?.addEventListener("click", onCancel);
     regenerateConfirmBtn?.addEventListener("click", onConfirm);
+    regenerateConfirmClose?.addEventListener("click", onCancel);
+    regenerateConfirm.addEventListener("click", onBackdrop);
+    regenerateConfirm.addEventListener("cancel", onEscape);
     regenerateConfirm.showModal();
   });
 }
@@ -857,8 +913,49 @@ function renderContextBarInsightPreview() {
 
 function getSessionProgress() {
   const total = state.questions.length || 0;
-  const answered = state.turns.filter((turn) => turn && turn.answer && turn.answer.trim()).length;
+  const answered = state.turns.filter((turn) => turn && turn.markedComplete && turn.answer && turn.answer.trim()).length;
   return { answered, total, label: total ? `${answered}/${total}` : "0/0" };
+}
+
+function getEffectiveTurnAnswer(turn) {
+  if (!turn) return "";
+  const mainAnswer = (turn.answer || "").trim();
+  if (mainAnswer) return mainAnswer;
+  const latestFollowup = (turn.followups || []).at(-1);
+  return (latestFollowup?.answer || "").trim();
+}
+
+function markCurrentTurnDone() {
+  if (!state.questions.length) return false;
+  saveCurrentFollowupAnswer();
+  saveCurrentTurn();
+  const turn = state.turns[state.currentIndex];
+  if (!turn) return false;
+
+  const effectiveAnswer = getEffectiveTurnAnswer(turn);
+  if (!effectiveAnswer) return false;
+
+  if (!turn.answer?.trim()) {
+    turn.answer = effectiveAnswer;
+  }
+  turn.markedComplete = true;
+  turn.status = "completed";
+  turn.updatedAt = new Date().toISOString();
+  state.turns[state.currentIndex] = turn;
+  return true;
+}
+
+function advanceToNextQuestion() {
+  if (state.currentIndex < state.questions.length - 1) {
+    state.currentIndex += 1;
+    outputState.textContent = localize(`第 ${state.currentIndex + 1} 题`, `Question ${state.currentIndex + 1}`);
+    setProgressStep("interview");
+  }
+  renderInterviewStage();
+  renderQuestionRail();
+  updatePrimaryActions();
+  renderSessionBanner();
+  persistSession();
 }
 
 function setWorkspaceMode(mode) {
@@ -867,8 +964,19 @@ function setWorkspaceMode(mode) {
     saveCurrentFollowupAnswer();
   }
 
-  state.phase = mode;
   workspace.dataset.mode = mode;
+  if (isSessionComplete()) {
+    if (mode === "summary") {
+      state.phase = "summary";
+      state.viewingFromSummary = false;
+    }
+  } else {
+    state.phase = mode;
+    if (mode !== "interview") {
+      state.viewingFromSummary = false;
+    }
+  }
+
   const showContext = mode === "interview" || mode === "summary";
   contextBar.classList.toggle("hidden", !showContext);
 
@@ -884,6 +992,7 @@ function setWorkspaceMode(mode) {
   }
 
   renderContextBar();
+  updateContextBarActions();
   renderMaterialsSidePanel();
   renderSessionBanner();
   updateStepNavAvailability();
@@ -993,7 +1102,8 @@ async function persistSessionImmediate() {
       role: payload.settings.role,
       round: state.round,
       progress: progress.label,
-      phase: state.phase,
+      phase: isSessionComplete() ? "summary" : state.phase,
+      completed: isSessionComplete(),
       engine: state.engine,
       updatedAt: payload.updatedAt,
     });
@@ -1027,6 +1137,7 @@ async function restoreSession(id) {
     state.turns = Array.isArray(payload.turns) ? payload.turns : [];
     state.phase = payload.phase || "materials";
     state.roundSummary = payload.roundSummary || null;
+    state.viewingFromSummary = false;
     state.resultMeta = payload.resultMeta || { matchScore: "--", duration: "--", analysis: [] };
     lastPersistAt = payload.resultMeta?.updatedAt || payload.updatedAt || null;
     state.parsedFiles.jd = payload.materials?.parsedJd || "";
@@ -1060,7 +1171,7 @@ async function restoreSession(id) {
 
     InterviewStorage.setActiveSessionId(id);
 
-    if (state.phase === "summary" && state.roundSummary) {
+    if (isSessionComplete()) {
       setWorkspaceMode("summary");
     } else if (state.questions.length) {
       setWorkspaceMode("interview");
@@ -1240,7 +1351,7 @@ async function tryResumeIncompleteSession() {
   if (!restored) return false;
 
   hideRestoreBanner();
-  if (state.phase !== "summary" && state.questions.length) {
+  if (!isSessionComplete() && state.questions.length) {
     setWorkspaceMode("materials");
     if (state.turns.some((turn) => (turn.followups || []).length)) {
       setProgressStep("followup");
@@ -1377,6 +1488,7 @@ function applyLanguage(targetLang = state.lang) {
   renderMaterialsSidePanel();
   renderSessionBanner();
   renderAllInsights();
+  updateContextBarActions();
   renderRoundSummary();
   renderHistoryDialog();
   updateStepNavAvailability();
@@ -2106,6 +2218,7 @@ function renderInterviewStage() {
   const question = state.questions[index];
   const existingTurn = state.turns[index] || {};
   const followups = existingTurn.followups || [];
+  const reviewMode = state.viewingFromSummary && isSessionComplete();
   const card = document.createElement("article");
   const meta = document.createElement("div");
   const title = document.createElement("strong");
@@ -2122,6 +2235,18 @@ function renderInterviewStage() {
     ? localize(`${getProviderLabel()} 实时生成`, `${getProviderLabel()} live generation`)
     : localize("本地模拟", "Local simulation");
   body.textContent = question;
+
+  if (reviewMode) {
+    const answerBlock = document.createElement("div");
+    const answerLabel = document.createElement("span");
+    const answerText = document.createElement("p");
+    answerBlock.className = "followup-block followup-answer";
+    answerLabel.className = "followup-block-label";
+    answerLabel.textContent = localize("你的回答", "Your Answer");
+    answerText.textContent = existingTurn.answer || localize("未填写", "Not filled");
+    answerBlock.append(answerLabel, answerText);
+    card.append(meta, title, body, answerBlock);
+  } else {
   answer.id = "currentAnswer";
   answer.className = "answer-input";
   answer.placeholder = localize("像真实面试一样输入你的回答，然后点击生成追问", "Answer as you would in a real interview, then generate a follow-up");
@@ -2137,16 +2262,11 @@ function renderInterviewStage() {
   nextButton.id = "nextQuestionButton";
   nextButton.textContent = index === state.questions.length - 1 ? localize("完成本轮", "Finish Round") : localize("下一题", "Next Question");
   nextButton.disabled = state.isLoading;
-  nextButton.addEventListener("click", () => {
-    if (index === state.questions.length - 1) {
-      completeRound(nextButton);
-    } else {
-      nextQuestion();
-    }
-  });
+  nextButton.addEventListener("click", () => handleQuestionAdvance(nextButton));
 
   actions.append(followupButton, nextButton);
   card.append(meta, title, body, answer, actions);
+  }
 
   if (followups.length) {
     const thread = document.createElement("section");
@@ -2158,7 +2278,7 @@ function renderInterviewStage() {
     list.className = "followup-list";
 
     followups.forEach((followupItem, followupIndex) => {
-      const isActive = followupIndex === followups.length - 1;
+      const isActive = followupIndex === followups.length - 1 && !reviewMode;
       const item = document.createElement("article");
       const header = document.createElement("div");
       const badge = document.createElement("span");
@@ -2185,12 +2305,13 @@ function renderInterviewStage() {
         const followupAnswer = document.createElement("textarea");
         const followupActions = document.createElement("div");
         const continueButton = document.createElement("button");
+        const followupNextButton = document.createElement("button");
         answerBlock.className = "followup-block followup-answer-editor";
         answerLabel.className = "followup-block-label";
         answerLabel.textContent = localize("你的回答", "Your Answer");
         followupAnswer.id = "currentFollowupAnswer";
         followupAnswer.className = "answer-input";
-        followupAnswer.placeholder = localize("输入你对追问的回答，然后点击继续追问", "Answer this follow-up, then continue probing");
+        followupAnswer.placeholder = localize("输入你对追问的回答，然后继续追问或进入下一题", "Answer this follow-up, then continue probing or go to the next question");
         followupAnswer.value = followupItem.answer || "";
         followupAnswer.disabled = state.isLoading;
         followupActions.className = "question-actions";
@@ -2199,17 +2320,23 @@ function renderInterviewStage() {
         continueButton.textContent = localize("继续追问", "Continue Follow-up");
         continueButton.disabled = state.isLoading;
         continueButton.addEventListener("click", () => handleFollowup(true, continueButton));
-        followupActions.append(continueButton);
+        followupNextButton.type = "button";
+        followupNextButton.textContent = index === state.questions.length - 1
+          ? localize("完成本轮", "Finish Round")
+          : localize("下一题", "Next Question");
+        followupNextButton.disabled = state.isLoading;
+        followupNextButton.addEventListener("click", () => handleQuestionAdvance(followupNextButton));
+        followupActions.append(continueButton, followupNextButton);
         answerBlock.append(answerLabel, followupAnswer, followupActions);
         item.append(answerBlock);
-      } else if (followupItem.answer) {
+      } else if (followupItem.answer || reviewMode) {
         const answerBlock = document.createElement("div");
         const answerLabel = document.createElement("span");
         const answerText = document.createElement("p");
         answerBlock.className = "followup-block followup-answer";
         answerLabel.className = "followup-block-label";
         answerLabel.textContent = localize("你的回答", "Your Answer");
-        answerText.textContent = followupItem.answer;
+        answerText.textContent = followupItem.answer || localize("未填写", "Not filled");
         answerBlock.append(answerLabel, answerText);
         item.append(answerBlock);
       }
@@ -2263,8 +2390,13 @@ function renderQuestionRail() {
   });
 }
 
-function navigateToQuestion(index) {
+function navigateToQuestion(index, options = {}) {
   if (state.isLoading || index === state.currentIndex) return;
+  if (options.fromSummary) {
+    state.viewingFromSummary = true;
+  } else if (!isSessionComplete()) {
+    state.viewingFromSummary = false;
+  }
   saveCurrentTurn();
   saveCurrentFollowupAnswer();
   state.currentIndex = index;
@@ -2272,6 +2404,7 @@ function navigateToQuestion(index) {
   renderInterviewStage();
   renderQuestionRail();
   updatePrimaryActions();
+  updateContextBarActions();
   renderSessionBanner();
   persistSession();
 }
@@ -2285,6 +2418,7 @@ function saveCurrentTurn(patch = {}) {
     question,
     answer: answerNode ? answerNode.value.trim() : existing.answer || "",
     followups: existing.followups || [],
+    markedComplete: existing.markedComplete || false,
     ...patch,
   };
   turn.status = deriveTurnStatus(turn);
@@ -2298,6 +2432,7 @@ function saveCurrentFollowupAnswer() {
   if (!answerNode) return "";
 
   const turn = state.turns[state.currentIndex];
+  if (!turn) return "";
   const latestFollowup = (turn.followups || []).at(-1);
   if (!latestFollowup) return "";
 
@@ -2402,7 +2537,7 @@ function buildLocalRoundSummary() {
 }
 
 function renderRoundSummary() {
-  if (!roundSummaryEl || state.phase !== "summary" || !state.roundSummary) {
+  if (!roundSummaryEl || !isSessionComplete()) {
     if (roundSummaryEl) roundSummaryEl.replaceChildren();
     return;
   }
@@ -2469,8 +2604,7 @@ function renderRoundSummary() {
     item.className = "summary-turn-item";
     item.innerHTML = `<strong>Q${index + 1}</strong><p>${turn.question}</p><p>${turn.answer ? turn.answer.slice(0, 120) : localize("未填写", "Not filled")}</p>`;
     item.addEventListener("click", () => {
-      state.phase = "interview";
-      navigateToQuestion(index);
+      navigateToQuestion(index, { fromSummary: true });
       setWorkspaceMode("interview");
     });
     turnList.append(item);
@@ -2503,10 +2637,12 @@ function renderRoundSummary() {
   renderAllInsights();
 }
 
-async function completeRound(button) {
+async function completeRound(button, options = {}) {
   if (!state.questions.length || state.isLoading) return;
-  saveCurrentTurn();
-  saveCurrentFollowupAnswer();
+  if (!options.skipMark && !markCurrentTurnDone()) {
+    showToast(localize("请先输入回答再完成本轮。", "Enter an answer before finishing the round."));
+    return;
+  }
 
   await withLoading(button, async () => {
     outputState.textContent = localize("生成复盘中...", "Generating review...");
@@ -2590,17 +2726,10 @@ async function handleFollowup(fromFollowupAnswer = false, button = null) {
 }
 
 function nextQuestion() {
-  if (!state.questions.length || state.isLoading) return;
-  saveCurrentTurn();
-  saveCurrentFollowupAnswer();
-  if (state.currentIndex < state.questions.length - 1) {
-    state.currentIndex += 1;
-    outputState.textContent = localize(`第 ${state.currentIndex + 1} 题`, `Question ${state.currentIndex + 1}`);
-    setProgressStep("interview");
-  }
-  renderInterviewStage();
-  renderQuestionRail();
-  persistSession();
+  if (!state.questions.length || state.isLoading) return false;
+  if (!markCurrentTurnDone()) return false;
+  advanceToNextQuestion();
+  return true;
 }
 
 async function renderResult() {
@@ -2695,6 +2824,7 @@ function resetAll(clearSession = true) {
   state.engine = "local";
   state.sessionId = clearSession ? null : state.sessionId;
   state.roundSummary = null;
+  state.viewingFromSummary = false;
   setResultMeta({ matchScore: "--", duration: "--", analysis: getDefaultAnalysisItems() });
   setWorkspaceMode("materials");
   renderSessionBanner();
@@ -2723,6 +2853,10 @@ newSessionBtn.addEventListener("click", () => {
   historyDialog.close();
 });
 editMaterialsBtn?.addEventListener("click", () => navigateWorkspace("materials"));
+backToSummaryBtn?.addEventListener("click", () => {
+  state.viewingFromSummary = false;
+  setWorkspaceMode("summary");
+});
 openMaterialsDrawerBtn?.addEventListener("click", openMaterialsDrawer);
 drawerEditMaterialsBtn?.addEventListener("click", () => {
   closeMaterialsDrawer();
@@ -2733,9 +2867,19 @@ materialsDrawer?.addEventListener("click", (event) => {
   if (event.target === materialsDrawer) closeMaterialsDrawer();
 });
 sessionBannerBtn?.addEventListener("click", () => navigateWorkspace("interview"));
-enterInterviewBtn?.addEventListener("click", () => navigateWorkspace("interview"));
+enterInterviewBtn?.addEventListener("click", () => {
+  if (isSessionComplete()) {
+    navigateWorkspace("followup");
+    return;
+  }
+  navigateWorkspace("interview");
+});
 regenerateBtn?.addEventListener("click", () => renderResult());
 generateButton.addEventListener("click", () => {
+  if (isSessionComplete() && workspace.dataset.mode === "materials") {
+    navigateWorkspace("followup");
+    return;
+  }
   if (state.questions.length && workspace.dataset.mode === "materials") {
     navigateWorkspace("interview");
     return;

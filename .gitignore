@@ -1,3 +1,5 @@
 .DS_Store
 outputs/
 tmp/
+.env
+.edgeone/
