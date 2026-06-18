@@ -26,6 +26,7 @@ const state = {
 };
 
 let persistTimer = null;
+let enginePrefsTimer = null;
 
 const companyInput = document.querySelector("#companyInput");
 const roleInput = document.querySelector("#roleInput");
@@ -34,6 +35,8 @@ const jdText = document.querySelector("#jdText");
 const resumeText = document.querySelector("#resumeText");
 const providerSelect = document.querySelector("#providerSelect");
 const apiKeyInput = document.querySelector("#apiKeyInput");
+const rememberApiKeyInput = document.querySelector("#rememberApiKey");
+const clearStoredCredentialsBtn = document.querySelector("#clearStoredCredentials");
 const modelInput = document.querySelector("#modelInput");
 const customModelInput = document.querySelector("#customModelInput");
 const customEndpointInput = document.querySelector("#customEndpointInput");
@@ -222,6 +225,15 @@ const staticText = {
   "API Key": "API Key",
   "开始模拟面试": "Start Mock Interview",
   "未填写 API Key 时使用本地模拟；填写后直接调用所选模型供应商，Key 仅保存在当前浏览器会话。": "Without an API key, the page uses local simulation. With a key, it calls the selected model provider directly. The key stays only in this browser session.",
+  "未填写 API Key 时使用本地模拟。模型设置会自动保存在本机；API Key 仅在勾选「在本机记住」后加密存储，不会写入面试历史。": "Without an API key, local simulation is used. Model settings are saved on this device. API keys are encrypted locally only when you opt in and are never written to session history.",
+  "在本机记住 API Key（加密存储，请勿在公共电脑勾选）": "Remember API key on this device (encrypted; do not use on shared computers)",
+  "清除本机已保存的 Key": "Clear saved key on this device",
+  "已本机加密保存": "Saved encrypted on device",
+  "仅当前会话": "Current session only",
+  "已填写（不存储）": "Provided (not stored)",
+  "本机已清除 API Key": "Saved API key cleared on this device",
+  "当前浏览器不支持加密存储 API Key": "This browser does not support encrypted API key storage",
+  "模型设置会自动保存在本机；API Key 仅在勾选「在本机记住」后加密存储。": "Model settings are saved on this device. API keys are encrypted locally only when you opt in.",
   "JD 内容": "JD Content",
   "链接 / 文本 / 图片 / Word / PDF": "Link / Text / Image / Word / PDF",
   "链接": "Link",
@@ -254,6 +266,7 @@ const staticText = {
   "历史": "History",
   "历史会话": "Session History",
   "会话自动保存在浏览器本地，API Key 不会被存储。": "Sessions are saved locally in your browser. API keys are never stored.",
+  "会话自动保存在浏览器本地。勾选「在本机记住」后，API Key 会加密保存在本机，不会写入历史会话记录。": "Sessions are saved locally. When you opt in, API keys are encrypted on this device and are not stored in session history.",
   "新建会话": "New Session",
   "展开材料": "Show Materials",
   "收起材料": "Hide Materials",
@@ -400,6 +413,10 @@ async function withLoading(button, asyncFn, labels) {
       button.disabled = false;
       button.dataset.loading = "false";
       button.textContent = labels.default || defaultLabel;
+    }
+    if (state.phase === "interview" && state.questions.length) {
+      renderInterviewStage();
+      renderQuestionRail();
     }
   }
 }
@@ -599,10 +616,27 @@ function updatePrimaryActions() {
   }
 }
 
+function isUnfinishedSessionMeta(meta) {
+  if (!meta || meta.phase === "summary") return false;
+  const match = String(meta.progress || "").match(/(\d+)\/(\d+)/);
+  if (!match) return meta.phase === "interview";
+  return Number(match[2]) > 0;
+}
+
+function findResumableSessionMeta(sessions) {
+  if (!sessions?.length) return null;
+  const activeId = InterviewStorage.getActiveSessionId();
+  if (activeId) {
+    const activeMeta = sessions.find((item) => item.id === activeId);
+    if (isUnfinishedSessionMeta(activeMeta)) return activeMeta;
+  }
+  return sessions.find((item) => isUnfinishedSessionMeta(item)) || null;
+}
+
 function renderSessionBanner() {
-  const show = state.questions.length > 0 && state.phase !== "summary" && workspace.dataset.mode === "materials";
-  sessionBanner?.classList.toggle("hidden", !show);
-  if (!show || !sessionBannerTitle || !sessionBannerMeta) return;
+  const hasActiveSession = state.questions.length > 0 && state.phase !== "summary";
+  sessionBanner?.classList.toggle("hidden", !(hasActiveSession && workspace.dataset.mode === "materials"));
+  if (!hasActiveSession || workspace.dataset.mode !== "materials" || !sessionBannerTitle || !sessionBannerMeta) return;
 
   const progress = getSessionProgress();
   const total = progress.total || state.questions.length || 0;
@@ -757,7 +791,7 @@ function renderMaterialsDrawer() {
     const rows = [
       [localize("模型供应商", "Model Provider"), getProviderLabel()],
       [localize("模型", "Model"), getSelectedModel() || "-"],
-      ["API Key", apiKeyInput.value.trim() ? localize("已填写（不存储）", "Provided (not stored)") : localize("未填写", "Not provided")],
+      ["API Key", getApiKeyStatusLabel()],
     ];
     rows.forEach(([label, value]) => {
       const row = document.createElement("p");
@@ -1006,11 +1040,6 @@ async function restoreSession(id) {
     if (payload.settings) {
       companyInput.value = payload.settings.company || "";
       roleInput.value = payload.settings.role || "";
-      if (payload.settings.provider) providerSelect.value = payload.settings.provider;
-      bindProviderModelsSync();
-      if (payload.settings.model) modelInput.value = payload.settings.model;
-      customModelInput.value = payload.settings.customModel || "";
-      customEndpointInput.value = payload.settings.customEndpoint || "";
     }
     if (payload.materials) {
       jdLink.value = payload.materials.jdLink || "";
@@ -1073,6 +1102,123 @@ function bindProviderModelsSync() {
   customEndpointField.classList.toggle("hidden", !config.needsEndpoint);
 }
 
+function getApiKeyStatusLabel() {
+  if (!apiKeyInput.value.trim()) return localize("未填写", "Not provided");
+  if (rememberApiKeyInput?.checked) return localize("已本机加密保存", "Saved encrypted on device");
+  return localize("仅当前会话", "Current session only");
+}
+
+function collectEnginePreferences() {
+  return {
+    company: companyInput.value.trim(),
+    role: roleInput.value.trim(),
+    provider: providerSelect.value,
+    model: getSelectedModel(),
+    customModel: customModelInput.value.trim(),
+    customEndpoint: customEndpointInput.value.trim(),
+    rememberApiKey: !!rememberApiKeyInput?.checked,
+  };
+}
+
+function applyEnginePreferences(prefs) {
+  if (!prefs) return;
+  if (prefs.company !== undefined) companyInput.value = prefs.company;
+  if (prefs.role !== undefined) roleInput.value = prefs.role;
+  if (prefs.provider) providerSelect.value = prefs.provider;
+  bindProviderModelsSync();
+  const config = providerConfig[providerSelect.value] || {};
+  if (config.needsCustomModel) {
+    customModelInput.value = prefs.customModel || prefs.model || "";
+  } else if (prefs.model) {
+    const hasOption = [...modelInput.options].some((option) => option.value === prefs.model);
+    if (hasOption) modelInput.value = prefs.model;
+  }
+  customEndpointInput.value = prefs.customEndpoint || "";
+  if (rememberApiKeyInput) {
+    rememberApiKeyInput.checked = !!prefs.rememberApiKey;
+    rememberApiKeyInput.disabled = !window.InterviewStorage?.isCryptoAvailable?.();
+  }
+}
+
+async function persistEnginePreferencesImmediate() {
+  if (!window.InterviewStorage?.saveEnginePreferences) return;
+  clearTimeout(enginePrefsTimer);
+  enginePrefsTimer = null;
+  const prefs = collectEnginePreferences();
+  try {
+    await InterviewStorage.saveEnginePreferences(prefs);
+    if (prefs.rememberApiKey && apiKeyInput.value.trim()) {
+      if (!InterviewStorage.isCryptoAvailable()) {
+        showToast(localize("当前浏览器不支持加密存储 API Key", "This browser does not support encrypted API key storage"));
+        if (rememberApiKeyInput) rememberApiKeyInput.checked = false;
+        await InterviewStorage.saveEnginePreferences({ ...prefs, rememberApiKey: false });
+        return;
+      }
+      await InterviewStorage.saveEncryptedApiKey(apiKeyInput.value.trim());
+    } else {
+      await InterviewStorage.clearEncryptedApiKey();
+    }
+  } catch (error) {
+    console.warn("Failed to persist engine preferences", error);
+  }
+}
+
+function persistEnginePreferences() {
+  clearTimeout(enginePrefsTimer);
+  enginePrefsTimer = setTimeout(() => {
+    persistEnginePreferencesImmediate();
+  }, 500);
+}
+
+async function loadEnginePreferencesOnInit() {
+  if (!window.InterviewStorage?.loadEnginePreferences) {
+    bindProviderModelsSync();
+    return;
+  }
+  try {
+    const prefs = await InterviewStorage.loadEnginePreferences();
+    if (prefs) {
+      applyEnginePreferences(prefs);
+    } else {
+      bindProviderModelsSync();
+    }
+    if (prefs?.rememberApiKey && InterviewStorage.isCryptoAvailable()) {
+      const savedKey = await InterviewStorage.loadEncryptedApiKey();
+      if (savedKey) apiKeyInput.value = savedKey;
+    }
+  } catch (error) {
+    console.warn("Failed to load engine preferences", error);
+    bindProviderModelsSync();
+  }
+}
+
+async function clearStoredCredentials() {
+  if (window.InterviewStorage?.clearEncryptedApiKey) {
+    await InterviewStorage.clearEncryptedApiKey();
+  }
+  apiKeyInput.value = "";
+  if (rememberApiKeyInput) rememberApiKeyInput.checked = false;
+  await persistEnginePreferencesImmediate();
+  showToast(localize("本机已清除 API Key", "Saved API key cleared on this device"));
+}
+
+function bindEnginePreferenceInputs() {
+  [companyInput, roleInput, providerSelect, modelInput, customModelInput, customEndpointInput].forEach((input) => {
+    input?.addEventListener("change", persistEnginePreferences);
+    input?.addEventListener("input", persistEnginePreferences);
+  });
+  apiKeyInput?.addEventListener("blur", persistEnginePreferences);
+  rememberApiKeyInput?.addEventListener("change", () => {
+    if (rememberApiKeyInput.checked && !InterviewStorage.isCryptoAvailable()) {
+      rememberApiKeyInput.checked = false;
+      showToast(localize("当前浏览器不支持加密存储 API Key", "This browser does not support encrypted API key storage"));
+      return;
+    }
+    persistEnginePreferencesImmediate();
+  });
+  clearStoredCredentialsBtn?.addEventListener("click", clearStoredCredentials);
+}
+
 function showRestoreBanner(sessionMeta) {
   restoreBannerText.textContent = `${localize("检测到未完成的面试会话", "An unfinished interview session was found")}: ${sessionMeta.title} (${sessionMeta.progress})`;
   restoreBanner.dataset.sessionId = sessionMeta.id;
@@ -1084,17 +1230,30 @@ function hideRestoreBanner() {
   delete restoreBanner.dataset.sessionId;
 }
 
-async function initRestoreFlow() {
-  if (!window.InterviewStorage) return;
-  const activeId = InterviewStorage.getActiveSessionId();
-  if (!activeId) return;
+async function tryResumeIncompleteSession() {
+  if (!window.InterviewStorage) return false;
   const sessions = InterviewStorage.readSessionIndex();
-  const meta = sessions.find((item) => item.id === activeId);
-  if (!meta || meta.phase === "materials") return;
-  showRestoreBanner(meta);
-  setTimeout(() => {
-    if (!restoreBanner.classList.contains("hidden")) hideRestoreBanner();
-  }, 8000);
+  const meta = findResumableSessionMeta(sessions);
+  if (!meta) return false;
+
+  const restored = await restoreSession(meta.id);
+  if (!restored) return false;
+
+  hideRestoreBanner();
+  if (state.phase !== "summary" && state.questions.length) {
+    setWorkspaceMode("materials");
+    if (state.turns.some((turn) => (turn.followups || []).length)) {
+      setProgressStep("followup");
+    } else if (state.questions.length) {
+      setProgressStep("interview");
+    }
+    renderSessionBanner();
+  }
+  return true;
+}
+
+async function initRestoreFlow() {
+  await tryResumeIncompleteSession();
 }
 
 function renderHistoryDialog() {
@@ -1251,9 +1410,10 @@ function setProgressStep(step) {
 }
 
 function bindProviderModels() {
-  const renderModels = () => bindProviderModelsSync();
-  providerSelect.addEventListener("change", renderModels);
-  renderModels();
+  providerSelect.addEventListener("change", () => {
+    bindProviderModelsSync();
+    persistEnginePreferences();
+  });
 }
 
 function getProviderLabel() {
@@ -2431,8 +2591,6 @@ function resetAll(clearSession = true) {
   if (clearSession && state.sessionId) {
     InterviewStorage.setActiveSessionId(null);
   }
-  companyInput.value = "";
-  roleInput.value = "";
   jdLink.value = "";
   jdText.value = "";
   resumeText.value = "";
@@ -2452,6 +2610,7 @@ function resetAll(clearSession = true) {
   state.roundSummary = null;
   setResultMeta({ matchScore: "--", duration: "--", analysis: getDefaultAnalysisItems() });
   setWorkspaceMode("materials");
+  renderSessionBanner();
   hideRestoreBanner();
   if (historyDialog.open) historyDialog.close();
 }
@@ -2460,6 +2619,7 @@ bindTabs();
 bindSegmented();
 bindFiles();
 bindPrepInputs();
+bindEnginePreferenceInputs();
 bindProviderModels();
 bindStepNavigation();
 bindDrawerTabs();
@@ -2510,12 +2670,18 @@ restoreBannerDismiss.addEventListener("click", hideRestoreBanner);
 historyDialog.addEventListener("click", (event) => {
   if (event.target === historyDialog) historyDialog.close();
 });
-applyLanguage(state.lang);
-setProgressStep("materials");
-setResultMeta({ matchScore: "--", duration: "--", analysis: getDefaultAnalysisItems() });
-renderMaterialsSidePanel();
-renderPrepOverview();
-updateStepNavAvailability();
-setWorkspaceMode("materials");
 document.querySelector("#resetButton").addEventListener("click", () => resetAll(true));
-initRestoreFlow();
+
+async function bootstrap() {
+  await loadEnginePreferencesOnInit();
+  applyLanguage(state.lang);
+  setProgressStep("materials");
+  setResultMeta({ matchScore: "--", duration: "--", analysis: getDefaultAnalysisItems() });
+  renderMaterialsSidePanel();
+  renderPrepOverview();
+  updateStepNavAvailability();
+  setWorkspaceMode("materials");
+  await initRestoreFlow();
+}
+
+bootstrap();

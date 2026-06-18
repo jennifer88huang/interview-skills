@@ -193,10 +193,15 @@
               API Key
               <input id="apiKeyInput" type="password" placeholder="sk-" autocomplete="off" />
             </label>
+            <label class="check-row engine-remember-row">
+              <input id="rememberApiKey" type="checkbox" />
+              在本机记住 API Key（加密存储，请勿在公共电脑勾选）
+            </label>
+            <button type="button" class="text-btn" id="clearStoredCredentials">清除本机已保存的 Key</button>
           </div>
 
           <button id="generateButton" class="primary-action" type="button">开始模拟面试</button>
-          <p class="privacy-note">未填写 API Key 时使用本地模拟；填写后直接调用所选模型供应商，Key 仅保存在当前浏览器会话。</p>
+          <p class="privacy-note" id="enginePrivacyNote">未填写 API Key 时使用本地模拟。模型设置会自动保存在本机；API Key 仅在勾选「在本机记住」后加密存储，不会写入面试历史。</p>
         </aside>
 
         <section class="input-panel" aria-label="材料输入">
@@ -277,7 +282,7 @@
               <li id="prepResumeStatus" data-status="pending">简历材料</li>
             </ul>
             <p class="prep-note" id="prepNote">生成后将在此展示匹配度与备战建议，并进入模拟面试。</p>
-            <p class="privacy-note prep-privacy">未填写 API Key 时使用本地模拟；填写后直接调用所选模型供应商，Key 仅保存在当前浏览器会话。</p>
+            <p class="privacy-note prep-privacy">模型设置会自动保存在本机；API Key 仅在勾选「在本机记住」后加密存储。</p>
           </div>
 
           <div id="sessionSummaryBlock" class="session-summary-block hidden">
@@ -422,7 +427,7 @@
         <h2>历史会话</h2>
         <button type="button" class="icon-button" id="historyDialogClose" aria-label="关闭">×</button>
       </div>
-      <p class="history-dialog-note">会话自动保存在浏览器本地，API Key 不会被存储。</p>
+      <p class="history-dialog-note">会话自动保存在浏览器本地。勾选「在本机记住」后，API Key 会加密保存在本机，不会写入历史会话记录。</p>
       <div id="historySessionList" class="history-session-list"></div>
       <div class="history-dialog-actions">
         <button type="button" class="secondary-action" id="newSessionBtn">新建会话</button>
@@ -431,7 +436,7 @@
 
     <script src="./vendor/pdf.min.js"></script>
     <script src="https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js"></script>
-    <script src="./storage.js?v=20260618-ui-v2"></script>
-    <script src="./app.js?v=20260618-banner-fix"></script>
+    <script src="./storage.js?v=20260618-engine-prefs"></script>
+    <script src="./app.js?v=20260618-resume-fix"></script>
   </body>
 </html>

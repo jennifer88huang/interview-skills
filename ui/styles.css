@@ -966,6 +966,30 @@ textarea:focus {
   font-weight: 600;
 }
 
+.engine-remember-row {
+  margin-top: 8px;
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.text-btn {
+  margin-top: 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.text-btn:hover {
+  color: var(--accent-strong);
+  text-decoration: underline;
+}
+
 .primary-action,
 .secondary-action {
   min-height: 44px;
