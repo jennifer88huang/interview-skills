@@ -7,7 +7,7 @@
 - 选择公司、岗位、面试轮次和训练模式
 - 生成 AI 面试官模拟结果：匹配度分析、10 道面试题、追问方向、备战建议
 - 阶段式工作台：材料准备 → 面试进行（题目导航 + 答题主区 + 备战洞察栏）→ 本轮总结
-- 浏览器本地持久化：自动保存会话，支持历史恢复（API Key 不存储）
+- 浏览器本地持久化：自动保存面试会话与模型设置；API Key 可选加密保存在本机
 
 ## 信息架构（Persistent Insight + Stage）
 
@@ -28,7 +28,18 @@
 - `index.html`：三态工作台、洞察栏、材料 Drawer、确认对话框
 - `styles.css`：阶段式布局、Session 条、Drawer、移动端适配
 - `app.js`：交互逻辑、`renderInsight()` 共享渲染、模式切换、LLM 调用与本地模拟兜底
-- `storage.js`：IndexedDB 会话持久化
+- `storage.js`：IndexedDB 会话持久化、引擎偏好与加密凭据存储
+
+## 本地存储说明
+
+| 数据 | 存储位置 | 说明 |
+|------|----------|------|
+| 面试会话 | IndexedDB `sessions` | 题目、答案、材料、阶段等 |
+| 模型设置 | IndexedDB `preferences` | 供应商、模型、自定义 endpoint，刷新后自动恢复 |
+| API Key（可选） | IndexedDB `credentials` + AES-GCM | 仅勾选「在本机记住」时加密保存，不写入会话历史 |
+| 设备密钥 | localStorage | 用于 AES 加密的随机密钥，仅本浏览器 |
+
+**安全提示：** 加密存储可防 casual 本地窥探，但无法防御同源 XSS。请勿在公共电脑勾选「在本机记住」。
 
 ## 使用方式
 
