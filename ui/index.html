@@ -45,9 +45,18 @@
         }
       }
     </script>
-    <link rel="stylesheet" href="./styles.css?v=20260603-i18n-polish" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./styles.css?v=20260618-followup-ui2" />
   </head>
   <body>
+    <div class="restore-banner hidden" id="restoreBanner" role="status">
+      <span id="restoreBannerText">检测到未完成的面试会话</span>
+      <button type="button" id="restoreBannerBtn">恢复会话</button>
+      <button type="button" class="restore-dismiss" id="restoreBannerDismiss" aria-label="关闭">×</button>
+    </div>
+
     <main class="app-shell">
       <header class="topbar">
         <div class="brand">
@@ -58,19 +67,54 @@
           </div>
         </div>
         <div class="status-strip" aria-label="流程状态">
-          <span class="status-dot active" data-step-dot="materials"></span>
-          <span data-step-label="materials">输入材料</span>
+          <button type="button" class="step-nav-item" data-step-nav="materials">
+            <span class="status-dot active" data-step-dot="materials"></span>
+            <span data-step-label="materials">输入材料</span>
+          </button>
           <span class="status-line" data-step-line="interview"></span>
-          <span class="status-dot" data-step-dot="interview"></span>
-          <span data-step-label="interview">生成面试</span>
+          <button type="button" class="step-nav-item" data-step-nav="interview" aria-disabled="true">
+            <span class="status-dot" data-step-dot="interview"></span>
+            <span data-step-label="interview">生成面试</span>
+          </button>
           <span class="status-line" data-step-line="followup"></span>
-          <span class="status-dot" data-step-dot="followup"></span>
-          <span data-step-label="followup">追问演练</span>
+          <button type="button" class="step-nav-item" data-step-nav="followup" aria-disabled="true">
+            <span class="status-dot" data-step-dot="followup"></span>
+            <span data-step-label="followup">追问演练</span>
+          </button>
         </div>
-        <button class="language-toggle" id="languageToggle" type="button">English</button>
+        <div class="topbar-actions">
+          <button class="history-toggle" id="historyToggle" type="button">历史</button>
+          <button class="language-toggle" id="languageToggle" type="button">English</button>
+        </div>
       </header>
 
-      <section class="workspace">
+      <div class="session-bar hidden" id="contextBar" aria-live="polite">
+        <div class="session-bar-main">
+          <div class="context-bar-info" id="contextBarInfo"></div>
+          <div class="session-bar-actions">
+            <button type="button" class="context-bar-btn hidden" id="backToSummaryBtn">返回复盘</button>
+            <button type="button" class="context-bar-btn" id="editMaterialsBtn">编辑材料</button>
+            <button type="button" class="context-bar-btn" id="openMaterialsDrawerBtn">材料▾</button>
+          </div>
+        </div>
+        <details class="session-bar-insight" id="contextBarInsight">
+          <summary id="contextBarInsightSummary">匹配摘要</summary>
+          <ul id="contextBarAnalysisPreview" class="session-insight-preview"></ul>
+        </details>
+      </div>
+
+      <div class="session-banner hidden" id="sessionBanner" role="status">
+        <div class="session-banner-content">
+          <span class="session-banner-dot" aria-hidden="true"></span>
+          <div class="session-banner-copy">
+            <strong id="sessionBannerTitle">进行中的面试</strong>
+            <span id="sessionBannerMeta">第 1/10 题 · 上次保存 2 分钟前</span>
+          </div>
+        </div>
+        <button type="button" class="session-banner-btn" id="sessionBannerBtn">继续面试 →</button>
+      </div>
+
+      <section class="workspace" data-mode="materials">
         <aside class="setup-panel" aria-label="面试设置">
           <div class="panel-head">
             <h2>面试设置</h2>
@@ -150,10 +194,15 @@
               API Key
               <input id="apiKeyInput" type="password" placeholder="sk-" autocomplete="off" />
             </label>
+            <label class="check-row engine-remember-row">
+              <input id="rememberApiKey" type="checkbox" />
+              在本机记住 API Key（加密存储，请勿在公共电脑勾选）
+            </label>
+            <button type="button" class="text-btn" id="clearStoredCredentials">清除本机已保存的 Key</button>
           </div>
 
           <button id="generateButton" class="primary-action" type="button">开始模拟面试</button>
-          <p class="privacy-note">未填写 API Key 时使用本地模拟；填写后直接调用所选模型供应商，Key 仅保存在当前浏览器会话。</p>
+          <p class="privacy-note" id="enginePrivacyNote">未填写 API Key 时使用本地模拟。模型设置会自动保存在本机；API Key 仅在勾选「在本机记住」后加密存储，不会写入面试历史。</p>
         </aside>
 
         <section class="input-panel" aria-label="材料输入">
@@ -184,11 +233,11 @@
             </div>
 
             <div class="tab-panel" id="jd-file">
-              <label class="dropzone">
+              <div class="dropzone" data-dropzone="jd">
                 <input id="jdFile" type="file" accept=".pdf,.doc,.docx,.txt,.md,image/*" />
                 <strong>上传 JD 文件</strong>
-                <span>支持 PDF、Word、图片、TXT、Markdown</span>
-              </label>
+                <span>支持 PDF、Word、图片、TXT、Markdown · 可拖拽文件到此处</span>
+              </div>
               <div class="file-meta" id="jdFileMeta">尚未选择文件</div>
             </div>
           </div>
@@ -212,61 +261,188 @@
             </div>
 
             <div class="tab-panel active" id="resume-file">
-              <label class="dropzone">
+              <div class="dropzone" data-dropzone="resume">
                 <input id="resumeFile" type="file" accept=".pdf,.doc,.docx,.txt,.md,image/*" />
                 <strong>上传简历文件</strong>
-                <span>支持 PDF、Word、图片、TXT、Markdown</span>
-              </label>
+                <span>支持 PDF、Word、图片、TXT、Markdown · 可拖拽文件到此处</span>
+              </div>
               <div class="file-meta" id="resumeFileMeta">尚未选择文件</div>
             </div>
           </div>
         </section>
 
-        <section class="output-panel" aria-live="polite" aria-label="模拟输出">
+        <section class="output-panel materials-side-panel" id="materialsSidePanel" aria-live="polite" aria-label="准备概览">
           <div class="panel-head">
-            <h2>模拟结果</h2>
+            <h2 id="sidePanelTitle">准备概览</h2>
             <span id="outputState">等待输入</span>
           </div>
 
-          <div class="metric-grid">
-            <div class="metric">
-              <span>JD 匹配度</span>
-              <strong id="matchScore">--</strong>
-            </div>
-            <div class="metric">
-              <span>题目数量</span>
-              <strong id="questionCount">--</strong>
-            </div>
-            <div class="metric">
-              <span>预计时长</span>
-              <strong id="duration">--</strong>
-            </div>
-          </div>
-
-          <div class="result-block">
-            <h3>匹配度分析</h3>
-            <ul id="analysisList">
-              <li>输入 JD 和简历后生成强匹配、需补强和简历弱点。</li>
+          <div id="prepOverviewBlock" class="prep-overview">
+            <ul class="prep-checklist" id="prepChecklist">
+              <li id="prepJdStatus" data-status="pending">JD 材料</li>
+              <li id="prepResumeStatus" data-status="pending">简历材料</li>
             </ul>
+            <p class="prep-note" id="prepNote">生成后将在此展示匹配度与备战建议，并进入模拟面试。</p>
+            <p class="privacy-note prep-privacy">模型设置会自动保存在本机；API Key 仅在勾选「在本机记住」后加密存储。</p>
           </div>
 
-          <div class="result-block">
-            <h3>模拟面试</h3>
+          <div id="sessionSummaryBlock" class="session-summary-block hidden">
+            <div class="metric-grid insight-metrics" id="materialsMetricGrid">
+              <div class="metric">
+                <span>JD 匹配度</span>
+                <strong class="insight-match-score" data-insight-match>--</strong>
+              </div>
+              <div class="metric">
+                <span>题目数量</span>
+                <strong class="insight-question-count" data-insight-count>--</strong>
+              </div>
+              <div class="metric">
+                <span>预计时长</span>
+                <strong class="insight-duration" data-insight-duration>--</strong>
+              </div>
+            </div>
+            <div class="result-block">
+              <h3>匹配度分析</h3>
+              <ul class="insight-analysis" id="analysisList"></ul>
+            </div>
+            <div class="session-summary-actions">
+              <button type="button" class="primary-action" id="enterInterviewBtn">进入面试</button>
+              <button type="button" class="secondary-action" id="regenerateBtn">重新生成</button>
+            </div>
+          </div>
+        </section>
+
+        <div class="interview-layout" id="interviewLayout" hidden>
+          <nav class="question-rail" id="questionRail" aria-label="题目导航">
+            <div class="rail-header">
+              <strong id="railProgressLabel">题目进度</strong>
+              <span id="railProgressCount">0/0</span>
+            </div>
+            <ul id="questionNavList" class="question-nav-list"></ul>
+          </nav>
+
+          <section class="interview-main" id="interviewMain" aria-label="模拟面试">
+            <div class="interview-main-head">
+              <h2>模拟面试</h2>
+              <span id="interviewState">进行中</span>
+            </div>
             <div id="interviewStage" class="interview-stage">
               <p class="empty-state">点击「开始模拟面试」后，这里会展示按公司风格生成的问题。</p>
             </div>
-          </div>
+          </section>
 
-          <div class="result-block">
-            <h3>面试记录</h3>
-            <div class="followup-box" id="followupBox">回答任意问题后，AI 面试官会基于你的回答继续深挖。</div>
-          </div>
-        </section>
+          <aside class="interview-insight insight-panel" id="interviewInsight" aria-label="面试匹配分析">
+            <div class="panel-head">
+              <h2>面试匹配分析</h2>
+            </div>
+            <details class="insight-collapse" id="interviewInsightCollapse" open>
+              <summary class="insight-collapse-trigger">匹配指标</summary>
+              <div class="metric-grid insight-metrics">
+                <div class="metric">
+                  <span>JD 匹配度</span>
+                  <strong class="insight-match-score match-badge" data-insight-match>--</strong>
+                </div>
+                <div class="metric">
+                  <span>题目数量</span>
+                  <strong class="insight-question-count" data-insight-count>--</strong>
+                </div>
+                <div class="metric">
+                  <span>预计时长</span>
+                  <strong class="insight-duration" data-insight-duration>--</strong>
+                </div>
+              </div>
+              <div class="result-block">
+                <h3>匹配度分析</h3>
+                <ul class="insight-analysis"></ul>
+              </div>
+            </details>
+          </aside>
+        </div>
+
+        <div class="summary-layout" id="summaryLayout" hidden>
+          <section class="round-summary" id="roundSummaryPanel" aria-label="本轮总结">
+            <div id="roundSummary"></div>
+          </section>
+          <aside class="summary-insight insight-panel" id="summaryInsight" aria-label="面试匹配分析">
+            <div class="panel-head">
+              <h2>面试匹配分析</h2>
+            </div>
+            <div class="metric-grid insight-metrics">
+              <div class="metric">
+                <span>JD 匹配度</span>
+                <strong class="insight-match-score match-badge" data-insight-match>--</strong>
+              </div>
+              <div class="metric">
+                <span>题目数量</span>
+                <strong class="insight-question-count" data-insight-count>--</strong>
+              </div>
+              <div class="metric">
+                <span>预计时长</span>
+                <strong class="insight-duration" data-insight-duration>--</strong>
+              </div>
+            </div>
+            <div class="result-block">
+              <h3>匹配度分析</h3>
+              <ul class="insight-analysis"></ul>
+            </div>
+          </aside>
+        </div>
       </section>
     </main>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <dialog class="materials-drawer" id="materialsDrawer">
+      <div class="materials-drawer-head">
+        <h2>材料查阅</h2>
+        <button type="button" class="icon-button" id="materialsDrawerClose" aria-label="关闭">×</button>
+      </div>
+      <div class="drawer-tabs" role="tablist" aria-label="材料标签">
+        <button type="button" class="selected" data-drawer-tab="overview">概览</button>
+        <button type="button" data-drawer-tab="jd">JD</button>
+        <button type="button" data-drawer-tab="resume">简历</button>
+        <button type="button" data-drawer-tab="settings">设置</button>
+      </div>
+      <div class="drawer-panels">
+        <div class="drawer-panel active" id="drawerOverview"></div>
+        <div class="drawer-panel" id="drawerJd"></div>
+        <div class="drawer-panel" id="drawerResume"></div>
+        <div class="drawer-panel" id="drawerSettings"></div>
+      </div>
+      <div class="materials-drawer-foot">
+        <button type="button" class="secondary-action" id="drawerEditMaterialsBtn">编辑材料</button>
+      </div>
+    </dialog>
+
+    <dialog class="confirm-dialog" id="regenerateConfirm" aria-labelledby="regenerateConfirmTitle">
+      <div class="confirm-dialog-head">
+        <h2 id="regenerateConfirmTitle">重新生成面试题？</h2>
+        <button type="button" class="icon-button" id="regenerateConfirmClose" aria-label="关闭">×</button>
+      </div>
+      <div class="confirm-dialog-body">
+        <p id="regenerateConfirmText">将开启新会话并重新生成题目，当前会话的答题进度不会保留。已自动保存的历史记录仍可在「历史」中查看。</p>
+      </div>
+      <div class="confirm-dialog-actions">
+        <button type="button" class="secondary-action" id="regenerateCancelBtn">取消</button>
+        <button type="button" class="primary-action" id="regenerateConfirmBtn">确认重新生成</button>
+      </div>
+    </dialog>
+
+    <div class="toast hidden" id="toast" role="status" aria-live="polite"></div>
+
+    <dialog class="history-dialog" id="historyDialog">
+      <div class="history-dialog-head">
+        <h2>历史会话</h2>
+        <button type="button" class="icon-button" id="historyDialogClose" aria-label="关闭">×</button>
+      </div>
+      <p class="history-dialog-note">会话自动保存在浏览器本地。勾选「在本机记住」后，API Key 会加密保存在本机，不会写入历史会话记录。</p>
+      <div id="historySessionList" class="history-session-list"></div>
+      <div class="history-dialog-actions">
+        <button type="button" class="secondary-action" id="newSessionBtn">新建会话</button>
+      </div>
+    </dialog>
+
+    <script src="./lib/pdf.min.js"></script>
     <script src="https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js"></script>
-    <script src="./app.js?v=20260603-i18n-polish"></script>
+    <script src="./storage.js?v=20260618-engine-prefs"></script>
+    <script src="./app.js?v=20260618-completed-session"></script>
   </body>
 </html>
