@@ -1,23 +1,23 @@
 <div align="center">
 
-# Interview Skills - AI Mock Interview Coach
+# Interview Skills — AI Mock Interview Coach
 
-**Big Tech AI Mock Interviewer Skill**
-
-Interview Skills is an AI mock interview coach for job seekers, engineers, product managers, students, and career switchers. It generates personalized mock interview questions from a real job description and a candidate resume, then helps users practice follow-up questions, technical interviews, coding interviews, system design interviews, behavioral interviews, HR interviews, salary negotiation, and full multi-round interview loops.
-
-This repository is designed for interview preparation, job interview practice, resume-based interview coaching, JD analysis, FAANG interview preparation, Big Tech interview preparation, and company-specific mock interviews for Google, Meta, Amazon, AWS, Microsoft, ByteDance, Tencent, Alibaba, Meituan, Huawei, and more.
-
+[![Stars](https://img.shields.io/github/stars/jennifer88huang/interview-skills?style=social)](https://github.com/jennifer88huang/interview-skills/stargazers)
+[![Forks](https://img.shields.io/github/forks/jennifer88huang/interview-skills?style=social)](https://github.com/jennifer88huang/interview-skills/network/members)
+[![Last Commit](https://img.shields.io/github/last-commit/jennifer88huang/interview-skills)](https://github.com/jennifer88huang/interview-skills/commits/main)
+[![License](https://img.shields.io/badge/license-MIT-orange)](LICENSE)
 [![Version](https://img.shields.io/badge/version-1.0.0-green)]()
-[![License](https://img.shields.io/badge/license-MIT-orange)]()
 
-**Live Demo: [Interview Skills AI Mock Interview Coach](https://jennifer88huang.github.io/interview-skills/)**
+**The open-source AI mock interview tool that personalizes every question to your resume and the exact job description you are applying for.**
 
-**Web App: [Start a mock interview from JD and resume](https://jennifer88huang.github.io/interview-skills/ui/?lang=en)**
+Interview Skills is an AI-powered mock interview coach for software engineers, product managers, data scientists, and career switchers preparing for technical interviews, behavioral interviews, system design interviews, coding interviews, HR interviews, and salary negotiation at FAANG companies, Big Tech firms, and China's top internet companies. It reads your actual JD and resume — not a generic question bank — and generates a tailored interview simulation that reflects the target company's real interview style.
 
-<img src="assets/interview-banner1.png" alt="Interview Skills AI Mock Interview Coach for interview preparation" width="100%">
+**Live Demo:** [Interview Skills AI Mock Interview Coach](https://jennifer88huang.github.io/interview-skills/)  
+**Web App:** [Start a mock interview from JD and resume](https://jennifer88huang.github.io/interview-skills/ui/?lang=en)
 
-[News](#news) · [Quick Start](#quick-start) · [What It Does](#what-it-does) · [Supported Companies](#supported-companies) · [Example Prompts](#example-prompts) · [Repository Structure](#repository-structure)
+<img src="assets/interview-banner1.png" alt="Interview Skills — AI Mock Interview Coach for FAANG and Big Tech interview preparation" width="100%">
+
+[News](#news) · [Who Is This For](#who-is-this-for) · [Quick Start](#quick-start) · [What It Does](#what-it-does) · [Key Scenarios](#key-scenarios) · [Supported Companies](#supported-companies) · [Example Prompts](#example-prompts) · [FAQ](#faq) · [Repository Structure](#repository-structure)
 
 </div>
 
@@ -26,149 +26,158 @@ This repository is designed for interview preparation, job interview practice, r
 ## News
 
 - **2026-06-04**: Added a browser-based Mock Interview UI where users can enter a JD and resume, generate a personalized interview simulation, answer questions, and practice follow-up questions online.
-- **2026-06-01**: Added `install-skill.sh`, allowing terminal users to run `bash install-skill.sh https://github.com/jennifer88huang/interview-skills.git` from the repository root.
-- **2026-05-28**: Added global big tech interview support for Google, Meta, Amazon/AWS, Microsoft, and related scenarios. 
-- **2026-04-24**: Added HR interview drills, salary negotiation scripts, and full multi-round interview flow simulation. 
-- **2026-04-06**: Added the initial Skill, PRD, JD parsing, resume parsing, company profiles, question design, and BEI/STAR behavioral interview framework. 
+- **2026-06-01**: Added `install-skill.sh`, one-command install for terminal users.
+- **2026-05-28**: Added global big tech interview support for Google, Meta, Amazon/AWS, Microsoft, and related scenarios.
+- **2026-04-24**: Added HR interview drills, salary negotiation scripts, and full multi-round interview flow simulation.
+- **2026-04-06**: Initial release — JD parsing, resume parsing, company profiles, question design, BEI/STAR behavioral interview framework.
+
+---
+
+## Who Is This For
+
+Interview Skills is designed for anyone preparing for a competitive job interview:
+
+- **Software engineers** targeting Google, Meta, Amazon, Microsoft, ByteDance, or any Big Tech company who need to practice coding, system design, and behavioral rounds together
+- **Product managers** who need company-specific behavioral and case-study questions aligned to the JD and their own project history
+- **New graduates and students** without much work experience who want realistic questions calibrated to entry-level expectations
+- **Career switchers** moving across industries or roles who need to bridge the gap between their current resume and the target JD
+- **Experienced engineers** preparing for senior or staff-level interviews that require deeper system design and leadership signal
+- **International job seekers** preparing for cross-cultural interviews at both China's top internet companies and global Big Tech
+
+If you have a job description and a resume, Interview Skills will tell you exactly where your gaps are and what the interviewer is most likely to ask.
+
+---
 
 ## What It Does
 
-- Parses the target job description, or JD, into hard skills, soft skills, and hidden evaluation signals.
-- Parses the resume to identify strengths, project evidence, risks, weak spots, and likely follow-up areas.
-- Compares JD requirements against the resume and highlights strong matches, gaps, and weak spots.
-- Generates 10 tailored mock interview questions with difficulty, evaluation points, answer hints, and follow-up directions.
-- Supports interactive follow-up: answer a question, then ask the AI interviewer to dig deeper.
-- Provides good-answer vs bad-answer comparisons for selected questions.
-- Supports coding interview practice, system design interview practice, behavioral interview practice, HR interview drills, salary negotiation scripts, and full multi-round interview simulations.
+- Parses the target job description into hard skills, soft skills, and hidden evaluation signals
+- Parses the resume to identify strengths, project evidence, risks, weak spots, and likely follow-up areas
+- Compares JD requirements against the resume and highlights strong matches, gaps, and weak spots
+- Generates 10 tailored mock interview questions with difficulty ratings, evaluation points, answer hints, and follow-up directions
+- Supports interactive follow-up: answer a question, then ask the AI interviewer to dig deeper
+- Provides good-answer vs bad-answer comparisons for any question
+- Supports coding interview practice, system design interview practice, behavioral interview practice (STAR framework), HR interview drills, salary negotiation scripts, and full multi-round interview simulations
+
+---
+
+## Key Scenarios
+
+| Scenario | What You Get |
+|----------|-------------|
+| **FAANG technical interview** | Coding + system design + behavioral questions calibrated to L4/L5/E5 expectations, company-specific style |
+| **China Big Tech interview** | Company culture and value alignment questions (Alibaba, ByteDance, Tencent style), algorithm deep-dives, project probing |
+| **HR interview prep** | Questions on resignation reasons, salary expectations, career plans — with hidden evaluation signals explained |
+| **Salary negotiation simulation** | Scripts for anchoring, responding to lowball offers, and handling competing-offer scenarios |
+| **Full multi-round loop** | Linked simulation from phone screen through final round, showing how answers in Round 1 affect Round 2 |
+| **Resume gap analysis** | Side-by-side JD vs resume match, identifying exactly what the interviewer will likely challenge |
+| **Good vs bad answer comparison** | For any question, see a high-score example, a low-score example, and a point-by-point breakdown |
+| **Entry-level / new grad** | Questions scaled to internship experience, academic projects, and potential rather than years of work |
+
+---
 
 ## Supported Companies
 
-| China Big Tech | Global Big Tech | Other Tech Companies |
-| --- | --- | --- |
+| China Big Tech | Global Big Tech | Other Tech |
+|---------------|----------------|------------|
 | Alibaba, Ant Group, Cainiao, Alibaba Cloud | Google | Didi, Kuaishou, Xiaohongshu |
 | Tencent, WeChat, Tencent Games, Tencent Cloud | Meta | Pinduoduo, JD.com, NetEase |
-| ByteDance, Douyin, TikTok, Feishu | Amazon, AWS, Ads, Retail | Huolala, Trip.com, Beike |
+| ByteDance, Douyin, TikTok, Feishu | Amazon, AWS | Huolala, Trip.com, Beike |
 | Baidu, Meituan, Huawei | Microsoft, Azure, Office, Teams | More coming soon |
 
-Companies not listed are also supported. The skill will infer the interview style from the JD, role, team, and candidate background.
+Companies not listed are also supported. The skill infers the interview style from the JD, role, team, and candidate background.
+
+---
 
 ## Role Coverage
 
-- Engineering: backend, frontend, mobile, AI/ML, data engineering, architecture, SRE, security
-- Product: consumer product, B2B product, growth product, game product
-- Business: operations, marketing, business analysis
-- Corporate functions: data analyst, HR, legal, finance
+- **Engineering:** backend, frontend, mobile (iOS/Android), AI/ML, data engineering, architecture, SRE, security
+- **Product:** consumer product, B2B product, growth product, game product
+- **Business:** operations, marketing, business analysis
+- **Corporate functions:** data analyst, HR, legal, finance
+
+---
 
 ## Quick Start
 
-### Browser UI
+### Option 1: Browser UI (no install needed)
 
-You can use the mock interview page directly without installing the Skill:
+Open the web app directly — no API key required for the basic simulation:
 
-```text
+```
 https://jennifer88huang.github.io/interview-skills/ui/?lang=en
 ```
 
-The browser UI supports a full interactive practice loop:
+1. Enter your target company, role, and interview round
+2. Paste or upload the JD (PDF, Word, text, or Markdown)
+3. Paste or upload your resume
+4. Click **Start Mock Interview**
 
-1. Fill in the target company, target role, and interview round in the left Interview Setup panel.
-2. Enter the JD in the center JD Content area by pasting a link, pasting text, or uploading a PDF, Word, TXT, or Markdown file.
-3. Provide your resume in the center Resume Content area. You can upload a PDF, Word, image, TXT, or Markdown file, or paste resume content manually.
-4. In the lower-left AI Engine section, choose a model provider and model, then paste your API key. When you provide a key, the page generates live interview questions and follow-ups; without a key, it uses local simulation.
-5. Click **Start Mock Interview**. The Result panel shows the JD-vs-resume match analysis and interview questions. Click **Generate Follow-up** or **Next Question** depending on how you want to practice.
+<img src="assets/mock-interview-ui-en.png" alt="Interview Skills browser mock interview UI" width="100%">
 
-The top progress indicator moves through Input Materials, Generate Interview, and Follow-up Practice. Use the top-right language button to switch between English and Chinese.
-
-<img src="assets/mock-interview-ui-en.png" alt="Browser Mock Interview UI screenshot" width="100%">
-
-Install from OpenClaw:
+### Option 2: OpenClaw Skill (chat interface)
 
 ```text
 /skill install git:jennifer88huang/interview-skills@main
 ```
 
-For terminal-based OpenClaw, install manually. The current `openclaw skills` command supports `list`, `info`, and `check`; it does not provide an `install` subcommand.
+Then start in one sentence:
+
+```text
+I am interviewing for a Google L4 backend engineer role. Here is my JD and resume. Please run a mock interview.
+```
+
+### Option 3: Terminal manual install
 
 ```bash
-# Run from this repository root.
 bash install-skill.sh https://github.com/jennifer88huang/interview-skills.git
 ```
 
-Equivalent manual install:
+Or manually:
 
 ```bash
 mkdir -p ~/.openclaw/skills
 git clone https://github.com/jennifer88huang/interview-skills.git ~/.openclaw/skills/interview-skills
-openclaw skills info interview-skills
-openclaw skills list
 ```
 
-To update an existing local install:
-
-```bash
-git -C ~/.openclaw/skills/interview-skills pull --ff-only
-```
-
-Then start with one sentence:
-
-```text
-I am interviewing for a Google L4 backend engineer role. Please run a mock interview based on this JD and my resume.
-```
-
-```text
-I am preparing for an Amazon SDE II / AWS backend interview. Simulate the full interview loop.
-```
-
-```text
-Help me prepare for a ByteDance backend engineer interview. The JD focuses on distributed systems, MySQL, Redis, and Go.
-```
+---
 
 ## Typical Workflow
 
-```text
-1. Tell the AI your target company and role.
+```
+1. Provide target company + role
         ↓
-2. Paste the JD. Partial JDs are acceptable.
+2. Paste the JD (partial JDs are fine)
         ↓
-3. Paste or upload your resume.
+3. Paste or upload your resume
         ↓
-4. Receive a JD-vs-resume match analysis.
+4. Receive JD-vs-resume match analysis
+   (strong match / needs work / resume weak spots)
         ↓
-5. Receive 10 tailored interview questions.
+5. Receive 10 tailored interview questions
+   (difficulty / evaluation points / answer hints / follow-up directions)
         ↓
-6. Review preparation advice ranked by urgency.
+6. Review preparation advice ranked by urgency
         ↓
-7. Optionally enter follow-up mode, HR mode, salary negotiation mode, or full-loop mode.
+7. Enter follow-up mode, HR mode, salary negotiation, or full-loop simulation
 ```
 
-## Output Format
-
-Each full mock interview includes:
-
-- Interview report header: company, role, interviewer identity
-- Company style analysis
-- JD vs resume match analysis
-- 10 tailored questions with difficulty, evaluation points, answer hints, and follow-up directions
-- Preparation advice with urgent/reference priority
-- Next-step commands for follow-up practice
+---
 
 ## Global Big Tech Interview Support
 
 ### Google
-
-Focuses on coding clarity, edge cases, complexity analysis, system design abstraction, reliability trade-offs, collaboration, and Googliness.
+Focuses on coding clarity, edge cases, time/space complexity, system design abstraction, reliability trade-offs, cross-functional collaboration, and Googliness.
 
 ### Meta
-
-Focuses on coding speed, large-scale product systems, impact, ownership, metrics, conflict handling, and execution in high-intensity environments.
+Focuses on coding speed, large-scale distributed systems, measurable impact, product intuition, ownership, metrics, conflict handling, and execution in fast-moving environments.
 
 ### Amazon
-
-Focuses on coding, system design, customer impact, operational reliability, cost, and Leadership Principles such as Customer Obsession, Ownership, Dive Deep, Bias for Action, and Deliver Results.
+Focuses on coding correctness, operational reliability, customer impact, cost awareness, and 16 Leadership Principles including Customer Obsession, Ownership, Dive Deep, Bias for Action, and Deliver Results.
 
 ### Microsoft
+Focuses on code quality, maintainability, cloud and platform fundamentals, growth mindset, inclusive collaboration, and long-term team fit.
 
-Focuses on coding quality, design maintainability, cloud and platform fundamentals, collaboration, growth mindset, and team fit.
+---
 
 ## Example Prompts
 
@@ -185,7 +194,7 @@ I am interviewing for Amazon SDE II on AWS. Generate Leadership Principles quest
 ```
 
 ```text
-I have an upcoming Microsoft Azure backend interview. Simulate the full interview loop from phone screen to hiring manager.
+I have an upcoming Microsoft Azure backend interview. Simulate the full loop from phone screen to hiring manager.
 ```
 
 ```text
@@ -196,22 +205,82 @@ Give me a good answer vs bad answer comparison for Q3.
 Only practice HR questions: resignation reason, salary expectation, and career plan.
 ```
 
+```text
+I have an offer but the total compensation is below my target. Help me prepare a salary negotiation script.
+```
+
+---
+
+## FAQ
+
+### What is an AI mock interview?
+
+An AI mock interview is a simulation of a real job interview conducted by an AI system. It generates tailored interview questions based on a specific job description and the candidate's resume, then allows the candidate to practice answering with AI follow-up probing. Unlike generic question banks, AI mock interviews adapt to the candidate's background and the target company's interview style.
+
+### How does Interview Skills differ from LeetCode, Glassdoor, or other prep tools?
+
+Most interview prep tools offer static, generic question banks that are not specific to your background or the role you are applying for. Interview Skills reads your actual resume and the exact JD you are targeting, identifies the gap between your experience and the role requirements, and generates questions that reflect what an interviewer at that specific company would most likely ask. It also explains the hidden evaluation signal behind each question.
+
+### Which companies are supported for mock interviews?
+
+Interview Skills supports mock interviews for Google, Meta, Amazon, AWS, Microsoft, ByteDance (TikTok, Douyin, Feishu), Alibaba (Ant Group, Alibaba Cloud), Tencent (WeChat, Tencent Games), Baidu, Meituan, Huawei, Didi, Kuaishou, Xiaohongshu, Pinduoduo, JD.com, NetEase, and 30+ other companies. For companies not explicitly listed, the skill infers the interview style from the JD, role, and team context.
+
+### What interview types are supported?
+
+Supported interview types include: coding interviews, technical deep-dive interviews, system design interviews, behavioral interviews using the STAR framework, BEI (Behavioral Event Interview) format, HR interviews, salary negotiation simulations, and full multi-round interview loops from phone screen through final round and hiring manager round.
+
+### Do I need a resume and JD to use it?
+
+No. You can provide only the target company and role name, and the skill generates questions based on typical patterns for that company and role. However, providing both a JD and a resume significantly improves personalization — the skill can then highlight which parts of your background are strong matches, which are gaps, and which the interviewer is most likely to challenge.
+
+### Is Interview Skills free to use?
+
+Yes. Interview Skills is fully open-source under the MIT license and free to use. The browser UI at [jennifer88huang.github.io/interview-skills/ui/](https://jennifer88huang.github.io/interview-skills/ui/) requires no account. The OpenClaw Skill version runs inside the OpenClaw AI assistant.
+
+### What is the STAR method in behavioral interviews?
+
+The STAR method (Situation, Task, Action, Result) is a structured framework for answering behavioral interview questions. Each answer should describe the context (Situation), your specific responsibility (Task), what you personally did (Action), and the measurable outcome (Result). Interview Skills uses the STAR framework to evaluate answers and identify which components are missing or too vague.
+
+### What are Amazon Leadership Principles in interviews?
+
+Amazon Leadership Principles (LPs) are 16 core values — including Customer Obsession, Ownership, Dive Deep, Bias for Action, and Deliver Results — that Amazon uses as the evaluation framework for all behavioral interview questions. Amazon interviews typically require candidates to demonstrate each principle through specific past experiences. Interview Skills generates LP-aligned behavioral questions and helps candidates prepare structured STAR-format answers for each principle.
+
+### Can I simulate a full multi-round interview loop?
+
+Yes. You can ask for a complete simulation from Round 1 through final round and HR round, with each round's questions linked to the previous round. The simulation shows how answers in early rounds influence what interviewers probe in later rounds, and identifies which round is most likely to be the elimination point based on your background.
+
+### How do I get the best results?
+
+Provide four inputs in one message: target company, target role, the full JD, and your resume. Then specify what you want to practice (e.g., technical only, full loop, HR only, salary negotiation). The more context you provide, the more the questions will reflect your actual interview situation.
+
+---
+
 ## Repository Structure
 
-```text
-interview-skills/
-├── SKILL.md
-├── README.md
-├── README-en.md
-├── PRD.md
-├── assets/
-└── references/
-    ├── company-profiles.md
-    ├── question-design.md
-    ├── jd-parser.md
-    ├── resume-parser.md
-    └── bei-framework.md
 ```
+interview-skills/
+├── SKILL.md                 # Main skill entry point and full instruction set
+├── README.md                # Chinese README
+├── README-en.md             # English README (this file)
+├── PRD.md                   # Product requirements document
+├── assets/                  # Screenshots and banner images
+└── references/
+    ├── company-profiles.md  # Interview style, process, and evaluation criteria by company
+    ├── question-design.md   # Question design principles and role-specific frameworks
+    ├── jd-parser.md         # JD parsing strategy and hidden signal extraction
+    ├── resume-parser.md     # Resume parsing strategy and weakness identification
+    └── bei-framework.md     # BEI/STAR framework and company value question bank
+```
+
+---
+
+## Contributing
+
+Contributions are welcome. If you want to add a new company profile, improve question templates, fix documentation, or add a new role category, please open an issue or submit a pull request. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+If you find this project useful, consider giving it a ⭐ — it helps more job seekers discover it.
+
+---
 
 ## Notes
 
