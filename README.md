@@ -47,6 +47,7 @@ Interview Skills is an AI mock interview coach for job seekers. It generates tar
 
 ## News
 
+- **2026-07-02**：新增 Senior AI Chatbot / LLM App 项目面试案例，覆盖 RAG、Prompt Injection、Session Memory、PII、多租户安全、Jenkins/AWS 部署与测试指标回答。
 - **2026-06-04**：新增网页版 Mock Interview UI，在线输入 JD 和简历等信息，实现面试模拟。
 - **2026-06-01**：新增 `install-skill.sh`，支持一键运行安装，降低使用门槛。
 - **2026-05-28**：新增海外大厂面试支持，覆盖 Google、Meta、Amazon/AWS、Microsoft 等公司。

@@ -53,6 +53,25 @@
 | Q9 | 行为/合作 | STAR 题 |
 | Q10 | 职业规划 | 学术路还是工业路 |
 
+### Senior AI Chatbot / LLM App 岗
+
+适用于 Senior AI Engineer、LLM Application Engineer、AI Platform Engineer、
+Solution Architect、Full-stack AI Product Engineer 等岗位。可以参考
+`references/chatbox-senior-ai-chatbot.md` 的项目案例。
+
+| # | 类型 | 示例 |
+|---|------|------|
+| Q1 | 架构总览 | 「请讲一下你的 chatbot 从用户请求到最终回答的完整链路」 |
+| Q2 | 产品边界 | 「这个系统和普通 ChatGPT wrapper 的区别是什么」 |
+| Q3 | Session / Memory | 「为什么你选择同一 session 记住，下次登录不自动恢复」 |
+| Q4 | RAG 质量 | 「你如何评估 retrieval 是否真的命中正确文档」 |
+| Q5 | Prompt Injection | 「如果恶意指令藏在检索文档里，你如何防」 |
+| Q6 | 多租户安全 | 「如何保证客户 A 看不到客户 B 的数据」 |
+| Q7 | PII / Compliance | 「如果用户要求 IMEI、手机号、定位资料，你怎么处理」 |
+| Q8 | Observability / Eval | 「上线后怎么发现 hallucination、fallback loop 或 no-context 问题」 |
+| Q9 | CI/CD / AWS | 「Jenkins 推到 AWS 前有哪些 gate，失败怎么 rollback」 |
+| Q10 | Senior Trade-off | 「哪些部分你已经证明，哪些部分还不能诚实地宣称已验证」 |
+
 ### 产品经理岗
 
 | # | 类型 | 示例 |
