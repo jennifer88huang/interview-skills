@@ -3,3 +3,4 @@ outputs/
 tmp/
 .env
 .edgeone/
+extensions/storage-sync/data/

@@ -1,0 +1,20 @@
+/* Export MD button in history dialog */
+
+.inj-export-btn {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--accent, #0f766e);
+  border-radius: 6px;
+  background: var(--surface, #fff);
+  color: var(--accent-strong, #0b5f59);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-right: 8px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.inj-export-btn:hover {
+  background: var(--accent, #0f766e);
+  color: #fff;
+}

@@ -1,0 +1,48 @@
+/* Microphone voice input button */
+
+.answer-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.answer-input-wrapper .answer-input {
+  margin-top: 0;
+  flex: 1;
+}
+
+.inj-mic-btn {
+  flex-shrink: 0;
+  width: 42px;
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line, #d9e0e7);
+  border-radius: 6px;
+  background: var(--surface, #fff);
+  color: var(--muted, #627080);
+  cursor: pointer;
+  transition: all 0.2s;
+  align-self: flex-end;
+  margin-bottom: 2px;
+}
+
+.inj-mic-btn:hover {
+  border-color: var(--accent, #0f766e);
+  color: var(--accent, #0f766e);
+}
+
+.inj-mic-btn.inj-mic-recording {
+  border-color: #ef4444;
+  background: #fef2f2;
+  color: #ef4444;
+  animation: inj-mic-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes inj-mic-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+}
