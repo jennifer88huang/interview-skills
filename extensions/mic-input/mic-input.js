@@ -2,7 +2,7 @@
  * Mic Input — adds 🎤 voice input button to answer textareas
  * Uses continuous recognition for low-latency real-time speech-to-text.
  * After mic stops, sends transcribed text to AI for error correction
- * (同音词/断句 fix only, no content addition).
+ * (同音词/断句 fix + filler removal, no content addition).
  * Includes current interview question as context for better disambiguation.
  * Non-invasive: loaded via server injection, no source modification.
  */
@@ -210,10 +210,26 @@
         ? "Interview question: " + question + "\n\n"
         : "当前面试问题：" + question + "\n\n";
     }
+
     if (isEn) {
-      return ctx + "The following text comes from speech recognition and may contain recognition errors (e.g., homophones). Use the question context above to help disambiguate. Correct ONLY obvious misrecognitions — do NOT add, remove, or rewrite any content. Return only the corrected text, no explanation.\n\nOriginal: " + text;
+      return ctx
+        + "Correct the following speech-to-text transcript into fluent written English:\n"
+        + "1. Fix misrecognized words and homophones — use the question context above to infer correct technical terms.\n"
+        + "2. Remove filler words: um, uh, like, you know, I mean, etc.\n"
+        + "3. Fix broken or run-on sentences so the answer reads naturally.\n"
+        + "4. CRITICAL: do NOT add any technical facts, explanations, or details that the speaker did NOT say. Only fix the language.\n"
+        + "5. Output the corrected text only. No markdown, no meta-commentary.\n\n"
+        + "Original: " + text;
     }
-    return ctx + "以下文字来自语音识别，可能含有识别错误（如同音词、断句错误）。请结合上述问题上下文辅助判断，修正明显的识别错误，不要添加、删减或改写任何内容。直接返回修正后的文本，不要任何解释。\n\n原文：" + text;
+
+    return ctx
+      + "请将以下语音识别文本修正为通顺流畅的书面回答：\n"
+      + "1. 根据上面的面试问题上下文推断专业术语，修正同音词错误（如 KFD→CANFD、总裁赵→仲裁段、看→CAN 等）。\n"
+      + "2. 删除口语填充词和无意义的重复：嗯、呃、啊、那个、就是说、但是呢、哦、然后…然后 等。\n"
+      + "3. 修复断句和语序混乱，把碎片化的口语整理为通顺的完整句子。\n"
+      + "4. 关键限制：不要添加任何讲话者没有说的技术事实、解释或观点。只修正语言表达，不补充内容。\n"
+      + "5. 只输出修正后的文本。不要加任何解释、点评或标记。\n\n"
+      + "原文：" + text;
   }
 
   function getEl(sel) { var e = document.querySelector(sel); return e ? e.value.trim() : ""; }
@@ -226,6 +242,13 @@
     var question = textarea ? findCurrentQuestion(textarea) : "";
     var prompt = buildCorrectionPrompt(text, question);
 
+    // Debug: verify question context is being included
+    if (question) {
+      console.log("[mic-input] Correction with question context:", question.slice(0, 80) + "...");
+    } else {
+      console.warn("[mic-input] No question context found for textarea — correction may be less accurate");
+    }
+
     if (provider === "anthropic") return callAnthropicCorrect(prompt, apiKey, model);
     if (provider === "gemini") return callGeminiCorrect(prompt, apiKey, model);
     return callOpenAICompatCorrect(prompt, apiKey, model, provider);
@@ -235,7 +258,7 @@
     var ep = getEndpoint(provider);
     var r = await fetch(ep, { method: "POST",
       headers: { "Authorization": "Bearer " + apiKey, "Content-Type": "application/json" },
-      body: JSON.stringify({ model: model, messages: [{ role: "user", content: prompt }], temperature: 0, max_tokens: 600 })
+      body: JSON.stringify({ model: model, messages: [{ role: "user", content: prompt }], temperature: 0.2, max_tokens: 800 })
     });
     if (!r.ok) {
       var errText = "";
@@ -255,7 +278,7 @@
   async function callAnthropicCorrect(prompt, apiKey, model) {
     var r = await fetch("https://api.anthropic.com/v1/messages", { method: "POST",
       headers: { "x-api-key": apiKey, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true", "Content-Type": "application/json" },
-      body: JSON.stringify({ model: model, max_tokens: 600, temperature: 0, messages: [{ role: "user", content: prompt }] })
+      body: JSON.stringify({ model: model, max_tokens: 800, temperature: 0.2, messages: [{ role: "user", content: prompt }] })
     });
     if (!r.ok) {
       var errTextA = "";
@@ -270,7 +293,7 @@
   async function callGeminiCorrect(prompt, apiKey, model) {
     var r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + encodeURIComponent(apiKey), {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0, maxOutputTokens: 600 } })
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.2, maxOutputTokens: 800 } })
     });
     if (!r.ok) {
       var errTextG = "";
