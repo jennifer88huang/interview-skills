@@ -3,6 +3,7 @@
  * Uses continuous recognition for low-latency real-time speech-to-text.
  * After mic stops, sends transcribed text to AI for error correction
  * (同音词/断句 fix only, no content addition).
+ * Includes current interview question as context for better disambiguation.
  * Non-invasive: loaded via server injection, no source modification.
  */
 (function () {
@@ -161,7 +162,7 @@
     btn.classList.add("inj-mic-correcting");
     btn.title = T("AI 修正中…", "AI correcting…");
 
-    callAIForCorrection(text).then(function (corrected) {
+    callAIForCorrection(text, textarea).then(function (corrected) {
       if (correctionSeq !== seq) return; // stale — a newer correction has started
       if (corrected) {
         var parts = [];
@@ -183,22 +184,47 @@
     });
   }
 
-  function buildCorrectionPrompt(text) {
-    var isEn = T("", "en") === "en";
-    if (isEn) {
-      return "The following text comes from speech recognition and may contain recognition errors (e.g., homophones). Correct ONLY obvious misrecognitions — do NOT add, remove, or rewrite any content. Return only the corrected text, no explanation.\n\nOriginal: " + text;
+  // ── Find current question from textarea's DOM context ─────
+
+  function findCurrentQuestion(textarea) {
+    // Main answer: textarea inside .interview-card, question is in :scope > p
+    var card = textarea.closest(".interview-card");
+    if (card) {
+      var p = card.querySelector(":scope > p");
+      return p ? p.textContent.trim() : "";
     }
-    return "以下文字来自语音识别，可能含有识别错误（如同音词、断句错误）。请根据上下文修正明显的识别错误，不要添加、删减或改写任何内容。直接返回修正后的文本，不要任何解释。\n\n原文：" + text;
+    // Follow-up answer: textarea inside .followup-item, question in .followup-question p
+    var item = textarea.closest(".followup-item");
+    if (item) {
+      var fp = item.querySelector(".followup-question p");
+      return fp ? fp.textContent.trim() : "";
+    }
+    return "";
+  }
+
+  function buildCorrectionPrompt(text, question) {
+    var isEn = T("", "en") === "en";
+    var ctx = "";
+    if (question) {
+      ctx = isEn
+        ? "Interview question: " + question + "\n\n"
+        : "当前面试问题：" + question + "\n\n";
+    }
+    if (isEn) {
+      return ctx + "The following text comes from speech recognition and may contain recognition errors (e.g., homophones). Use the question context above to help disambiguate. Correct ONLY obvious misrecognitions — do NOT add, remove, or rewrite any content. Return only the corrected text, no explanation.\n\nOriginal: " + text;
+    }
+    return ctx + "以下文字来自语音识别，可能含有识别错误（如同音词、断句错误）。请结合上述问题上下文辅助判断，修正明显的识别错误，不要添加、删减或改写任何内容。直接返回修正后的文本，不要任何解释。\n\n原文：" + text;
   }
 
   function getEl(sel) { var e = document.querySelector(sel); return e ? e.value.trim() : ""; }
 
-  async function callAIForCorrection(text) {
+  async function callAIForCorrection(text, textarea) {
     var apiKey = getEl("#apiKeyInput");
     if (!apiKey) throw new Error("NO_API_KEY");
     var provider = getEl("#providerSelect") || "openai";
     var model = getEl("#modelInput") || getEl("#customModelInput") || "gpt-4.1";
-    var prompt = buildCorrectionPrompt(text);
+    var question = textarea ? findCurrentQuestion(textarea) : "";
+    var prompt = buildCorrectionPrompt(text, question);
 
     if (provider === "anthropic") return callAnthropicCorrect(prompt, apiKey, model);
     if (provider === "gemini") return callGeminiCorrect(prompt, apiKey, model);
