@@ -24,7 +24,6 @@
 
   function toggleMic(btn, textarea) {
     if (currentRecognition) {
-      // Manual stop — don't auto-restart
       shouldRestart = false;
       stopMic();
       return;
@@ -44,24 +43,19 @@
     var recognition = new SpeechRecognition();
     recognition.lang = T("zh-CN", "en-US");
     recognition.interimResults = true;
-    recognition.continuous = true;   // true continuous — no gap between utterances
+    recognition.continuous = true;
     recognition.maxAlternatives = 1;
 
     recognition.onresult = function (event) {
       var interimText = "";
-
-      // Process only new/changed results since last event
       for (var i = event.resultIndex; i < event.results.length; i++) {
         var transcript = event.results[i][0].transcript;
         if (event.results[i].isFinal) {
-          // Accumulate final text across utterances with space separator
           utteranceFinal += (utteranceFinal ? " " : "") + transcript;
         } else {
           interimText += transcript;
         }
       }
-
-      // Real-time display: original + all final + current interim
       var parts = [];
       if (originalValue) parts.push(originalValue);
       if (utteranceFinal) parts.push(utteranceFinal);
@@ -71,30 +65,16 @@
     };
 
     recognition.onerror = function (event) {
-      if (event.error === "no-speech") {
-        // No speech — may auto-restart on onend
-        return;
-      }
-      if (event.error === "aborted") {
-        // Aborted by our stop() — normal
-        return;
-      }
-      // Real error (not-allowed, network, service-not-allowed, etc.)
+      if (event.error === "no-speech" || event.error === "aborted") return;
       console.warn("Speech recognition error:", event.error);
       shouldRestart = false;
     };
 
     recognition.onend = function () {
-      // If shouldRestart is true (not manually stopped) and textarea still in DOM,
-      // create a fresh recognition to continue (browser may impose ~60s limit)
       if (shouldRestart && currentMicBtn === btn && textarea.isConnected) {
         var next = createRecognition(btn, textarea);
-        if (next) {
-          currentRecognition = next;
-          try { next.start(); } catch (e) { stopMic(); }
-        } else {
-          stopMic();
-        }
+        if (next) { currentRecognition = next; try { next.start(); } catch (e) { stopMic(); } }
+        else { stopMic(); }
       } else {
         stopMic();
       }
@@ -108,12 +88,8 @@
   function startListening(btn, textarea) {
     var recognition = createRecognition(btn, textarea);
     if (!recognition) return;
-
-    // Snapshot textarea value at the START of the recording session
-    // (not reset between utterances — continuous mode keeps accumulating)
     originalValue = textarea.value;
     utteranceFinal = "";
-
     currentRecognition = recognition;
     currentMicBtn = btn;
     currentTextarea = textarea;
@@ -126,26 +102,16 @@
 
   function stopMic() {
     shouldRestart = false;
-
-    // Capture transcribed text BEFORE clearing state
     var textToCorrect = utteranceFinal;
     var origVal = originalValue;
     var ta = currentTextarea;
     var btn = currentMicBtn;
-
-    if (currentRecognition) {
-      try { currentRecognition.stop(); } catch (e) { /* ignore */ }
-      currentRecognition = null;
-    }
-    if (btn) {
-      btn.classList.remove("inj-mic-recording");
-    }
+    if (currentRecognition) { try { currentRecognition.stop(); } catch (e) {} currentRecognition = null; }
+    if (btn) { btn.classList.remove("inj-mic-recording"); }
     currentMicBtn = null;
     currentTextarea = null;
     originalValue = "";
     utteranceFinal = "";
-
-    // ── Request AI correction for the transcribed text ──────
     if (textToCorrect && ta && btn) {
       requestCorrection(textToCorrect, ta, origVal, btn);
     } else if (btn) {
@@ -157,13 +123,11 @@
 
   function requestCorrection(text, textarea, originalVal, btn) {
     var seq = ++correctionSeq;
-
-    // Visual feedback: correcting state
     btn.classList.add("inj-mic-correcting");
     btn.title = T("AI 修正中…", "AI correcting…");
 
     callAIForCorrection(text, textarea).then(function (corrected) {
-      if (correctionSeq !== seq) return; // stale — a newer correction has started
+      if (correctionSeq !== seq) return;
       if (corrected) {
         var parts = [];
         if (originalVal) parts.push(originalVal);
@@ -174,7 +138,6 @@
     }).catch(function (e) {
       if (correctionSeq !== seq) return;
       console.warn("Mic AI correction failed:", e);
-      // Leave transcribed text as-is on error
     }).finally(function () {
       if (correctionSeq !== seq) return;
       if (btn) {
@@ -187,49 +150,11 @@
   // ── Find current question from textarea's DOM context ─────
 
   function findCurrentQuestion(textarea) {
-    // Main answer: textarea inside .interview-card, question is in :scope > p
     var card = textarea.closest(".interview-card");
-    if (card) {
-      var p = card.querySelector(":scope > p");
-      return p ? p.textContent.trim() : "";
-    }
-    // Follow-up answer: textarea inside .followup-item, question in .followup-question p
+    if (card) { var p = card.querySelector(":scope > p"); return p ? p.textContent.trim() : ""; }
     var item = textarea.closest(".followup-item");
-    if (item) {
-      var fp = item.querySelector(".followup-question p");
-      return fp ? fp.textContent.trim() : "";
-    }
+    if (item) { var fp = item.querySelector(".followup-question p"); return fp ? fp.textContent.trim() : ""; }
     return "";
-  }
-
-  function buildCorrectionPrompt(text, question) {
-    var isEn = T("", "en") === "en";
-    var ctx = "";
-    if (question) {
-      ctx = isEn
-        ? "Interview question: " + question + "\n\n"
-        : "当前面试问题：" + question + "\n\n";
-    }
-
-    if (isEn) {
-      return ctx
-        + "Correct the following speech-to-text transcript into fluent written English:\n"
-        + "1. Fix misrecognized words and homophones — use the question context above to infer correct technical terms.\n"
-        + "2. Remove filler words: um, uh, like, you know, I mean, etc.\n"
-        + "3. Fix broken or run-on sentences so the answer reads naturally.\n"
-        + "4. CRITICAL: do NOT add any technical facts, explanations, or details that the speaker did NOT say. Only fix the language.\n"
-        + "5. Output the corrected text only. No markdown, no meta-commentary.\n\n"
-        + "Original: " + text;
-    }
-
-    return ctx
-      + "请将以下语音识别文本修正为通顺流畅的书面回答：\n"
-      + "1. 根据上面的面试问题上下文推断专业术语，修正同音词错误（如 KFD→CANFD、总裁赵→仲裁段、看→CAN 等）。\n"
-      + "2. 删除口语填充词和无意义的重复：嗯、呃、啊、那个、就是说、但是呢、哦、然后…然后 等。\n"
-      + "3. 修复断句和语序混乱，把碎片化的口语整理为通顺的完整句子。\n"
-      + "4. 关键限制：不要添加任何讲话者没有说的技术事实、解释或观点。只修正语言表达，不补充内容。\n"
-      + "5. 只输出修正后的文本。不要加任何解释、点评或标记。\n\n"
-      + "原文：" + text;
   }
 
   function getEl(sel) { var e = document.querySelector(sel); return e ? e.value.trim() : ""; }
@@ -240,29 +165,36 @@
     var provider = getEl("#providerSelect") || "openai";
     var model = getEl("#modelInput") || getEl("#customModelInput") || "gpt-4.1";
     var question = textarea ? findCurrentQuestion(textarea) : "";
-    var prompt = buildCorrectionPrompt(text, question);
+    var isEn = T("", "en") === "en";
+    var sysPrompt = isEn
+      ? "You are a speech-to-text corrector. Fix misrecognized words (homophones) using the interview question as context. Remove filler words (um, uh, like). Fix broken sentences. Do NOT add any technical content the speaker did not say. Output the corrected text only — no explanation."
+      : "你是语音识别修正器。根据面试问题上下文修正同音词和专业术语错误，删除口语填充词（嗯、呃、那个等），修复断句。不要添加讲话者未说的技术内容。只输出修正后的文本。";
+    var userMsg = question
+      ? (isEn ? "Question: " + question + "\n\nTranscript: " + text : "问题：" + question + "\n\n转录：" + text)
+      : (isEn ? "Transcript: " + text : "转录：" + text);
 
-    // Debug: verify question context is being included
     if (question) {
       console.log("[mic-input] Correction with question context:", question.slice(0, 80) + "...");
     } else {
       console.warn("[mic-input] No question context found for textarea — correction may be less accurate");
     }
 
-    if (provider === "anthropic") return callAnthropicCorrect(prompt, apiKey, model);
-    if (provider === "gemini") return callGeminiCorrect(prompt, apiKey, model);
-    return callOpenAICompatCorrect(prompt, apiKey, model, provider);
+    if (provider === "anthropic") return callAnthropicCorrect(sysPrompt, userMsg, apiKey, model);
+    if (provider === "gemini") return callGeminiCorrect(sysPrompt, userMsg, apiKey, model);
+    return callOpenAICompatCorrect(sysPrompt, userMsg, apiKey, model, provider);
   }
 
-  async function callOpenAICompatCorrect(prompt, apiKey, model, provider) {
+  async function callOpenAICompatCorrect(sysPrompt, userMsg, apiKey, model, provider) {
     var ep = getEndpoint(provider);
     var r = await fetch(ep, { method: "POST",
       headers: { "Authorization": "Bearer " + apiKey, "Content-Type": "application/json" },
-      body: JSON.stringify({ model: model, messages: [{ role: "user", content: prompt }], temperature: 0.2, max_tokens: 800 })
+      body: JSON.stringify({ model: model, messages: [
+        { role: "system", content: sysPrompt },
+        { role: "user", content: userMsg }
+      ], temperature: 0.2, max_tokens: 800 })
     });
     if (!r.ok) {
-      var errText = "";
-      try { errText = await r.text(); } catch (e) {}
+      var errText = ""; try { errText = await r.text(); } catch (e) {}
       throw new Error("API " + r.status + (errText ? ": " + errText.slice(0, 200) : ""));
     }
     var d = await r.json();
@@ -275,31 +207,26 @@
     return m[provider] || "https://api.openai.com/v1/chat/completions";
   }
 
-  async function callAnthropicCorrect(prompt, apiKey, model) {
+  async function callAnthropicCorrect(sysPrompt, userMsg, apiKey, model) {
     var r = await fetch("https://api.anthropic.com/v1/messages", { method: "POST",
       headers: { "x-api-key": apiKey, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true", "Content-Type": "application/json" },
-      body: JSON.stringify({ model: model, max_tokens: 800, temperature: 0.2, messages: [{ role: "user", content: prompt }] })
+      body: JSON.stringify({ model: model, system: sysPrompt, max_tokens: 800, temperature: 0.2,
+        messages: [{ role: "user", content: userMsg }] })
     });
-    if (!r.ok) {
-      var errTextA = "";
-      try { errTextA = await r.text(); } catch (e) {}
-      throw new Error("Anthropic API " + r.status + (errTextA ? ": " + errTextA.slice(0, 200) : ""));
-    }
+    if (!r.ok) { var ea = ""; try { ea = await r.text(); } catch (e) {} throw new Error("Anthropic API " + r.status + (ea ? ": " + ea.slice(0, 200) : "")); }
     var d = await r.json(); var t = "";
     (d.content || []).forEach(function (b) { if (b.type === "text") t += b.text; });
     return t.trim() || null;
   }
 
-  async function callGeminiCorrect(prompt, apiKey, model) {
+  async function callGeminiCorrect(sysPrompt, userMsg, apiKey, model) {
     var r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + encodeURIComponent(apiKey), {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.2, maxOutputTokens: 800 } })
+      body: JSON.stringify({ systemInstruction: { parts: [{ text: sysPrompt }] },
+        contents: [{ parts: [{ text: userMsg }] }],
+        generationConfig: { temperature: 0.2, maxOutputTokens: 800 } })
     });
-    if (!r.ok) {
-      var errTextG = "";
-      try { errTextG = await r.text(); } catch (e) {}
-      throw new Error("Gemini API " + r.status + (errTextG ? ": " + errTextG.slice(0, 200) : ""));
-    }
+    if (!r.ok) { var eg = ""; try { eg = await r.text(); } catch (e) {} throw new Error("Gemini API " + r.status + (eg ? ": " + eg.slice(0, 200) : "")); }
     var d = await r.json(); var t = "";
     (d.candidates || []).forEach(function (c) { (c.content?.parts || []).forEach(function (p) { if (p.text) t += p.text; }); });
     return t.trim() || null;
@@ -308,12 +235,10 @@
   function createMicButton(textarea) {
     if (textarea.dataset.injMic) return;
     textarea.dataset.injMic = "1";
-
     var wrapper = document.createElement("div");
     wrapper.className = "answer-input-wrapper";
     textarea.parentNode.insertBefore(wrapper, textarea);
     wrapper.appendChild(textarea);
-
     var btn = document.createElement("button");
     btn.type = "button";
     btn.className = "inj-mic-btn";
@@ -325,18 +250,13 @@
   }
 
   function scan() {
-    // If recognition is running on a textarea no longer in DOM, clean up
-    if (currentRecognition && currentTextarea && !currentTextarea.isConnected) {
-      stopMic();
-    }
-
+    if (currentRecognition && currentTextarea && !currentTextarea.isConnected) { stopMic(); }
     var main = document.querySelector("#currentAnswer");
     var followup = document.querySelector("#currentFollowupAnswer");
     if (main) createMicButton(main);
     if (followup) createMicButton(followup);
   }
 
-  // Watch DOM for new textareas
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", function () {
       var observer = new MutationObserver(scan);
