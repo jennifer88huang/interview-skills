@@ -1,6 +1,8 @@
 /**
  * Mic Input — adds 🎤 voice input button to answer textareas
  * Uses continuous recognition for low-latency real-time speech-to-text.
+ * After mic stops, sends transcribed text to AI for error correction
+ * (同音词/断句 fix only, no content addition).
  * Non-invasive: loaded via server injection, no source modification.
  */
 (function () {
@@ -14,6 +16,10 @@
   var shouldRestart = false;   // auto-restart if browser stops recognition
   var originalValue = "";      // textarea value when recording first started
   var utteranceFinal = "";     // accumulated FINAL text across all utterances
+
+  // ── AI correction: ordering guarantee ────────────────────
+
+  var correctionSeq = 0;       // monotonic — only latest correction is applied
 
   function toggleMic(btn, textarea) {
     if (currentRecognition) {
@@ -111,6 +117,7 @@
     currentMicBtn = btn;
     currentTextarea = textarea;
     shouldRestart = true;
+    btn.classList.remove("inj-mic-correcting");
     btn.classList.add("inj-mic-recording");
     btn.title = T("录音中…点击停止", "Recording… Click to stop");
     recognition.start();
@@ -118,18 +125,135 @@
 
   function stopMic() {
     shouldRestart = false;
+
+    // Capture transcribed text BEFORE clearing state
+    var textToCorrect = utteranceFinal;
+    var origVal = originalValue;
+    var ta = currentTextarea;
+    var btn = currentMicBtn;
+
     if (currentRecognition) {
       try { currentRecognition.stop(); } catch (e) { /* ignore */ }
       currentRecognition = null;
     }
-    if (currentMicBtn) {
-      currentMicBtn.classList.remove("inj-mic-recording");
-      currentMicBtn.title = T("点击开始语音输入", "Click to start voice input");
-      currentMicBtn = null;
+    if (btn) {
+      btn.classList.remove("inj-mic-recording");
     }
+    currentMicBtn = null;
     currentTextarea = null;
     originalValue = "";
     utteranceFinal = "";
+
+    // ── Request AI correction for the transcribed text ──────
+    if (textToCorrect && ta && btn) {
+      requestCorrection(textToCorrect, ta, origVal, btn);
+    } else if (btn) {
+      btn.title = T("点击开始语音输入", "Click to start voice input");
+    }
+  }
+
+  // ── AI Correction ─────────────────────────────────────────
+
+  function requestCorrection(text, textarea, originalVal, btn) {
+    var seq = ++correctionSeq;
+
+    // Visual feedback: correcting state
+    btn.classList.add("inj-mic-correcting");
+    btn.title = T("AI 修正中…", "AI correcting…");
+
+    callAIForCorrection(text).then(function (corrected) {
+      if (correctionSeq !== seq) return; // stale — a newer correction has started
+      if (corrected) {
+        var parts = [];
+        if (originalVal) parts.push(originalVal);
+        parts.push(corrected);
+        textarea.value = parts.join(" ");
+        textarea.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+    }).catch(function (e) {
+      if (correctionSeq !== seq) return;
+      console.warn("Mic AI correction failed:", e);
+      // Leave transcribed text as-is on error
+    }).finally(function () {
+      if (correctionSeq !== seq) return;
+      if (btn) {
+        btn.classList.remove("inj-mic-correcting");
+        btn.title = T("点击开始语音输入", "Click to start voice input");
+      }
+    });
+  }
+
+  function buildCorrectionPrompt(text) {
+    var isEn = T("", "en") === "en";
+    if (isEn) {
+      return "The following text comes from speech recognition and may contain recognition errors (e.g., homophones). Correct ONLY obvious misrecognitions — do NOT add, remove, or rewrite any content. Return only the corrected text, no explanation.\n\nOriginal: " + text;
+    }
+    return "以下文字来自语音识别，可能含有识别错误（如同音词、断句错误）。请根据上下文修正明显的识别错误，不要添加、删减或改写任何内容。直接返回修正后的文本，不要任何解释。\n\n原文：" + text;
+  }
+
+  function getEl(sel) { var e = document.querySelector(sel); return e ? e.value.trim() : ""; }
+
+  async function callAIForCorrection(text) {
+    var apiKey = getEl("#apiKeyInput");
+    if (!apiKey) throw new Error("NO_API_KEY");
+    var provider = getEl("#providerSelect") || "openai";
+    var model = getEl("#modelInput") || getEl("#customModelInput") || "gpt-4.1";
+    var prompt = buildCorrectionPrompt(text);
+
+    if (provider === "anthropic") return callAnthropicCorrect(prompt, apiKey, model);
+    if (provider === "gemini") return callGeminiCorrect(prompt, apiKey, model);
+    return callOpenAICompatCorrect(prompt, apiKey, model, provider);
+  }
+
+  async function callOpenAICompatCorrect(prompt, apiKey, model, provider) {
+    var ep = getEndpoint(provider);
+    var r = await fetch(ep, { method: "POST",
+      headers: { "Authorization": "Bearer " + apiKey, "Content-Type": "application/json" },
+      body: JSON.stringify({ model: model, messages: [{ role: "user", content: prompt }], temperature: 0, max_tokens: 600 })
+    });
+    if (!r.ok) {
+      var errText = "";
+      try { errText = await r.text(); } catch (e) {}
+      throw new Error("API " + r.status + (errText ? ": " + errText.slice(0, 200) : ""));
+    }
+    var d = await r.json();
+    return (d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content || "").trim() || null;
+  }
+
+  function getEndpoint(provider) {
+    var c = getEl("#customEndpointInput"); if (c) return c;
+    var m = { openai: "https://api.openai.com/v1/chat/completions", deepseek: "https://api.deepseek.com/chat/completions", qwen: "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions", kimi: "https://api.moonshot.cn/v1/chat/completions", glm: "https://open.bigmodel.cn/api/paas/v4/chat/completions", minimax: "https://api.minimax.chat/v1/text/chatcompletion_v2", xai: "https://api.x.ai/v1/chat/completions", mistral: "https://api.mistral.ai/v1/chat/completions", perplexity: "https://api.perplexity.ai/chat/completions", openrouter: "https://openrouter.ai/api/v1/chat/completions" };
+    return m[provider] || "https://api.openai.com/v1/chat/completions";
+  }
+
+  async function callAnthropicCorrect(prompt, apiKey, model) {
+    var r = await fetch("https://api.anthropic.com/v1/messages", { method: "POST",
+      headers: { "x-api-key": apiKey, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true", "Content-Type": "application/json" },
+      body: JSON.stringify({ model: model, max_tokens: 600, temperature: 0, messages: [{ role: "user", content: prompt }] })
+    });
+    if (!r.ok) {
+      var errTextA = "";
+      try { errTextA = await r.text(); } catch (e) {}
+      throw new Error("Anthropic API " + r.status + (errTextA ? ": " + errTextA.slice(0, 200) : ""));
+    }
+    var d = await r.json(); var t = "";
+    (d.content || []).forEach(function (b) { if (b.type === "text") t += b.text; });
+    return t.trim() || null;
+  }
+
+  async function callGeminiCorrect(prompt, apiKey, model) {
+    var r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + encodeURIComponent(apiKey), {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0, maxOutputTokens: 600 } })
+    });
+    if (!r.ok) {
+      var errTextG = "";
+      try { errTextG = await r.text(); } catch (e) {}
+      throw new Error("Gemini API " + r.status + (errTextG ? ": " + errTextG.slice(0, 200) : ""));
+    }
+    var d = await r.json(); var t = "";
+    (d.candidates || []).forEach(function (c) { (c.content?.parts || []).forEach(function (p) { if (p.text) t += p.text; }); });
+    return t.trim() || null;
   }
 
   function createMicButton(textarea) {
