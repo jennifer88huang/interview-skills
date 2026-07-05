@@ -203,8 +203,13 @@
 
     pending[key] = promise;
     promise.then(function (text) {
-      if (text) { setCached(key, text); finish(quote, text); }
-      else { quote.textContent = T("生成失败，请重试", "Generation failed. Retry."); }
+      if (text) {
+        text = stripPreamble(text);
+        setCached(key, text);
+        finish(quote, text);
+      } else {
+        quote.textContent = T("生成失败，请重试", "Generation failed. Retry.");
+      }
     }).catch(function (e) {
       console.warn("Ref answer failed:", e);
       if (e && e.message === "NO_API_KEY") {
@@ -262,17 +267,47 @@
     return b;
   }
 
+  // ── Strip AI preamble (safety net) ─────────────────────
+
+  function stripPreamble(text) {
+    if (!text) return text;
+    // Patterns of meta-commentary that AI models often prepend
+    var patterns = [
+      // Chinese preambles
+      /^好的[，,]\s*我[^。\n]{0,30}[：:]\s*/i,
+      /^好的[，,]\s*(我|作为|以下|这是)[^。\n]{0,40}[。\n]\s*/i,
+      /^作为(面试教练|AI|人工智能)[^。\n]*[：:\n]\s*/i,
+      /^以下是[^。\n]{0,20}[：:\n]\s*/i,
+      /^这是[^。\n]{0,20}[：:\n]\s*/i,
+      /^(我|我们)(会|来|将)[^。\n]{0,30}(给出|回答|提供)[^。\n]*[：:\n]\s*/i,
+      // English preambles
+      /^(Here'?s?|Here is)[^.?!\n]{0,40}[.:]\s*/i,
+      /^As an?( interview)? coach[^.?!\n]*[.:]\s*/i,
+      /^I (would|will|can)[^.?!\n]{0,40}[.:]\s*/i,
+      /^Let me[^.?!\n]{0,40}[.:]\s*/i,
+      /^Sure[!.,][^.?!\n]{0,40}[.:]\s*/i,
+    ];
+    for (var i = 0; i < patterns.length; i++) {
+      var prev = text;
+      text = text.replace(patterns[i], "");
+      if (text !== prev) break; // one pass — remove at most one preamble line
+    }
+    // Remove wrapping quotes around the entire answer
+    text = text.replace(/^[""'']/, "").replace(/[""'']$/, "");
+    return text.trim();
+  }
+
   // ── Prompt ────────────────────────────────────────────
 
   function buildRefPrompt(question, userAnswer) {
     var isEn = T("", "en") === "en";
     if (isEn) {
-      var p = "You are an expert interview coach. Provide a concise model answer (60-120 words). Natural tone. Return only the answer text.";
-      if (userAnswer) p += "\n\nCandidate answered: " + userAnswer + "\n\nProvide a stronger reference answer addressing gaps.";
+      var p = "You are an expert interview coach. Write ONLY the model answer in the candidate's voice — as if they are speaking it in the interview right now. Natural tone, 60-120 words. Do NOT include any preamble, introduction, or meta-commentary (no \"Here is a better answer:\", no \"As a coach, I would say:\"). Output the answer directly, starting from the first word of the answer itself.";
+      if (userAnswer) p += "\n\nCandidate's answer: " + userAnswer + "\n\nProvide a stronger answer addressing gaps.";
       return p + "\n\nQuestion: " + question;
     }
-    var p = "你是一位资深面试教练。请为这道面试题给出简洁的参考答案（80-150字），用真实面试中的自然口吻。只返回参考答案文本。";
-    if (userAnswer) p += "\n\n候选人的回答是：" + userAnswer + "\n\n请给出更完善的参考答案，弥补其不足或深化回答。";
+    var p = "你是一位资深面试教练。请直接以求职者的口吻写出参考答案（80-150字），就像求职者在面试现场做出的真实回答。\n\n⚠️ 严格禁止：不要在答案前添加任何引导语、前缀或自我介绍（如\"好的\"、\"作为面试教练\"、\"以下是参考答案\"、\"我会这样回答\"、\"这是严格禁止的\"等），直接输出答案正文的第一个字。";
+    if (userAnswer) p += "\n\n候选人的回答：" + userAnswer + "\n\n请给出更完善的参考答案，弥补其不足。";
     return p + "\n\n面试题：" + question;
   }
 
