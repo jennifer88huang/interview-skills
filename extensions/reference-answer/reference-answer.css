@@ -53,3 +53,9 @@
 .inj-ref-blockquote.inj-ref-loaded {
   font-style: normal;
 }
+
+.inj-ref-blockquote:focus {
+  outline: none;
+  border-left-color: var(--accent, #0f766e);
+  box-shadow: 0 0 0 4px var(--focus, rgba(15, 118, 110, 0.15));
+}

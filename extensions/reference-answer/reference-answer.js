@@ -129,7 +129,7 @@
     if (hasOwnRefBlock(container)) return;
     if (anchor.nextElementSibling && anchor.nextElementSibling.classList.contains("inj-ref-block")) return;
 
-    var block = buildRefBlock(cached);
+    var block = buildRefBlock(cached, key);
     anchor.insertAdjacentElement("afterend", block);
   }
 
@@ -174,7 +174,7 @@
     if (!anchor) { if (onDone) onDone(); return; }
 
     // Placeholder
-    var block = buildRefBlock(T("生成中…", "Generating…"));
+    var block = buildRefBlock(T("生成中…", "Generating…"), key);
     anchor.insertAdjacentElement("afterend", block);
     var quote = block.querySelector("blockquote");
 
@@ -234,7 +234,7 @@
     return "";
   }
 
-  function buildRefBlock(text) {
+  function buildRefBlock(text, key) {
     var b = document.createElement("div");
     b.className = "followup-block inj-ref-block";
     var l = document.createElement("span");
@@ -244,7 +244,16 @@
     var q = document.createElement("blockquote");
     q.className = "inj-ref-blockquote";
     q.textContent = text;
+    q.contentEditable = "true";
     if (text !== T("生成中…", "Generating…")) q.classList.add("inj-ref-loaded");
+    if (key) {
+      q.addEventListener("blur", function () {
+        var newText = q.textContent.trim();
+        if (newText && newText !== getCached(key)) {
+          setCached(key, newText);
+        }
+      });
+    }
     b.append(q);
     return b;
   }
