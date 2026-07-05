@@ -267,11 +267,11 @@
   function buildRefPrompt(question, userAnswer) {
     var isEn = T("", "en") === "en";
     if (isEn) {
-      var p = "You are an expert interview coach. Write ONLY the model answer in the candidate's voice — as if they are speaking it in the interview right now. Natural tone, 60-120 words. Do NOT include any preamble, introduction, or meta-commentary (no \"Here is a better answer:\", no \"As a coach, I would say:\"). Output the answer directly, starting from the first word of the answer itself.";
+      var p = "You are an interview coach. Write a concise model answer in the candidate's voice (60-120 words). Output the answer directly — no preamble.";
       if (userAnswer) p += "\n\nCandidate's answer: " + userAnswer + "\n\nProvide a stronger answer addressing gaps.";
       return p + "\n\nQuestion: " + question;
     }
-    var p = "你是一位资深面试教练。请直接以求职者的口吻写出参考答案（80-150字），就像求职者在面试现场做出的真实回答。\n\n⚠️ 严格禁止：不要在答案前添加任何引导语、前缀或自我介绍（如\"好的\"、\"作为面试教练\"、\"以下是参考答案\"、\"我会这样回答\"、\"这是严格禁止的\"等），直接输出答案正文的第一个字。";
+    var p = "你是一位面试教练。以求职者口吻给出一段参考答案（80-150字），直接输出答案，不要任何前缀。";
     if (userAnswer) p += "\n\n候选人的回答：" + userAnswer + "\n\n请给出更完善的参考答案，弥补其不足。";
     return p + "\n\n面试题：" + question;
   }
