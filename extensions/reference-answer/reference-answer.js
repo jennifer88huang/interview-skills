@@ -203,13 +203,8 @@
 
     pending[key] = promise;
     promise.then(function (text) {
-      if (text) {
-        text = stripPreamble(text);
-        setCached(key, text);
-        finish(quote, text);
-      } else {
-        quote.textContent = T("生成失败，请重试", "Generation failed. Retry.");
-      }
+      if (text) { setCached(key, text); finish(quote, text); }
+      else { quote.textContent = T("生成失败，请重试", "Generation failed. Retry."); }
     }).catch(function (e) {
       console.warn("Ref answer failed:", e);
       if (e && e.message === "NO_API_KEY") {
@@ -265,36 +260,6 @@
     }
     b.append(q);
     return b;
-  }
-
-  // ── Strip AI preamble (safety net) ─────────────────────
-
-  function stripPreamble(text) {
-    if (!text) return text;
-    // Patterns of meta-commentary that AI models often prepend
-    var patterns = [
-      // Chinese preambles
-      /^好的[，,]\s*我[^。\n]{0,30}[：:]\s*/i,
-      /^好的[，,]\s*(我|作为|以下|这是)[^。\n]{0,40}[。\n]\s*/i,
-      /^作为(面试教练|AI|人工智能)[^。\n]*[：:\n]\s*/i,
-      /^以下是[^。\n]{0,20}[：:\n]\s*/i,
-      /^这是[^。\n]{0,20}[：:\n]\s*/i,
-      /^(我|我们)(会|来|将)[^。\n]{0,30}(给出|回答|提供)[^。\n]*[：:\n]\s*/i,
-      // English preambles
-      /^(Here'?s?|Here is)[^.?!\n]{0,40}[.:]\s*/i,
-      /^As an?( interview)? coach[^.?!\n]*[.:]\s*/i,
-      /^I (would|will|can)[^.?!\n]{0,40}[.:]\s*/i,
-      /^Let me[^.?!\n]{0,40}[.:]\s*/i,
-      /^Sure[!.,][^.?!\n]{0,40}[.:]\s*/i,
-    ];
-    for (var i = 0; i < patterns.length; i++) {
-      var prev = text;
-      text = text.replace(patterns[i], "");
-      if (text !== prev) break; // one pass — remove at most one preamble line
-    }
-    // Remove wrapping quotes around the entire answer
-    text = text.replace(/^[""'']/, "").replace(/[""'']$/, "");
-    return text.trim();
   }
 
   // ── Prompt ────────────────────────────────────────────
