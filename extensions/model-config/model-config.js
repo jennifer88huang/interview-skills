@@ -66,7 +66,16 @@
           try {
             options = options || {};
             var body = JSON.parse(options.body || "{}");
+            // Strip :thinking suffix from model value if present
+            if (body.model && body.model.endsWith(":thinking")) {
+              body.model = body.model.replace(/:thinking$/, "");
+            }
             if (selectedOpt.dataset.thinking === "1") {
+              // Remove params incompatible with thinking mode (DeepSeek V4)
+              delete body.temperature;
+              delete body.top_p;
+              delete body.presence_penalty;
+              delete body.frequency_penalty;
               body.thinking = { type: "enabled" };
               body.reasoning_effort = "high";
             } else {

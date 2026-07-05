@@ -2,10 +2,10 @@
   "_note": "V4 defaults thinking ON. Non-thinking must send {thinking:{type:'disabled'}}. Thinking mode sends {thinking:{type:'enabled'},reasoning_effort:'high'}",
   "deepseek": {
     "models": [
-      { "value": "deepseek-v4-flash", "label": "V4 Flash" },
-      { "value": "deepseek-v4-flash", "label": "V4 Flash (思考)",  "thinking": true },
-      { "value": "deepseek-v4-pro",   "label": "V4 Pro" },
-      { "value": "deepseek-v4-pro",   "label": "V4 Pro (思考)",    "thinking": true }
+      { "value": "deepseek-v4-flash",           "label": "V4 Flash" },
+      { "value": "deepseek-v4-flash:thinking",  "label": "V4 Flash (思考)",  "thinking": true },
+      { "value": "deepseek-v4-pro",             "label": "V4 Pro" },
+      { "value": "deepseek-v4-pro:thinking",    "label": "V4 Pro (思考)",    "thinking": true }
     ]
   }
 }

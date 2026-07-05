@@ -204,10 +204,14 @@
     pending[key] = promise;
     promise.then(function (text) {
       if (text) { setCached(key, text); finish(quote, text); }
-      else { quote.textContent = T("未配置 API Key", "API Key not configured."); }
+      else { quote.textContent = T("生成失败，请重试", "Generation failed. Retry."); }
     }).catch(function (e) {
       console.warn("Ref answer failed:", e);
-      quote.textContent = T("生成失败", "Generation failed.");
+      if (e && e.message === "NO_API_KEY") {
+        quote.textContent = T("未配置 API Key", "API Key not configured.");
+      } else {
+        quote.textContent = T("API 调用失败: " + (e && e.message || ""), "API error: " + (e && e.message || ""));
+      }
     }).finally(function () {
       delete pending[key];
       if (onDone) onDone();
@@ -276,7 +280,7 @@
 
   async function callAIForRef(question, userAnswer) {
     var apiKey = getEl("#apiKeyInput");
-    if (!apiKey) return null;
+    if (!apiKey) throw new Error("NO_API_KEY");
     var provider = getEl("#providerSelect") || "openai";
     var model = getEl("#modelInput") || getEl("#customModelInput") || "gpt-4.1";
     var prompt = buildRefPrompt(question, userAnswer);
@@ -291,14 +295,18 @@
     var ep = getEndpoint(provider);
     var r = await fetch(ep, { method: "POST", headers: { "Authorization": "Bearer " + apiKey, "Content-Type": "application/json" },
       body: JSON.stringify({ model: model, messages: [{ role: "user", content: prompt }], temperature: 0.4, max_tokens: 600 }) });
-    if (!r.ok) return null;
+    if (!r.ok) {
+      var errText = "";
+      try { errText = await r.text(); } catch (e) {}
+      throw new Error("API " + r.status + (errText ? ": " + errText.slice(0, 200) : ""));
+    }
     var d = await r.json();
     return (d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content || "").trim() || null;
   }
 
   function getEndpoint(provider) {
     var c = getEl("#customEndpointInput"); if (c) return c;
-    var m = { openai: "https://api.openai.com/v1/chat/completions", deepseek: "https://api.deepseek.com/v1/chat/completions", qwen: "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions", kimi: "https://api.moonshot.cn/v1/chat/completions", glm: "https://open.bigmodel.cn/api/paas/v4/chat/completions", minimax: "https://api.minimax.chat/v1/text/chatcompletion_v2", xai: "https://api.x.ai/v1/chat/completions", mistral: "https://api.mistral.ai/v1/chat/completions", perplexity: "https://api.perplexity.ai/chat/completions", openrouter: "https://openrouter.ai/api/v1/chat/completions" };
+    var m = { openai: "https://api.openai.com/v1/chat/completions", deepseek: "https://api.deepseek.com/chat/completions", qwen: "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions", kimi: "https://api.moonshot.cn/v1/chat/completions", glm: "https://open.bigmodel.cn/api/paas/v4/chat/completions", minimax: "https://api.minimax.chat/v1/text/chatcompletion_v2", xai: "https://api.x.ai/v1/chat/completions", mistral: "https://api.mistral.ai/v1/chat/completions", perplexity: "https://api.perplexity.ai/chat/completions", openrouter: "https://openrouter.ai/api/v1/chat/completions" };
     return m[provider] || "https://api.openai.com/v1/chat/completions";
   }
 
@@ -306,7 +314,11 @@
     var r = await fetch("https://api.anthropic.com/v1/messages", { method: "POST",
       headers: { "x-api-key": apiKey, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true", "Content-Type": "application/json" },
       body: JSON.stringify({ model: model, max_tokens: 600, temperature: 0.4, messages: [{ role: "user", content: prompt }] }) });
-    if (!r.ok) return null;
+    if (!r.ok) {
+      var errTextA = "";
+      try { errTextA = await r.text(); } catch (e) {}
+      throw new Error("Anthropic API " + r.status + (errTextA ? ": " + errTextA.slice(0, 200) : ""));
+    }
     var d = await r.json(); var t = "";
     (d.content || []).forEach(function (b) { if (b.type === "text") t += b.text; });
     return t.trim() || null;
@@ -316,7 +328,11 @@
     var r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + encodeURIComponent(apiKey), {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.4, maxOutputTokens: 600 } }) });
-    if (!r.ok) return null;
+    if (!r.ok) {
+      var errTextG = "";
+      try { errTextG = await r.text(); } catch (e) {}
+      throw new Error("Gemini API " + r.status + (errTextG ? ": " + errTextG.slice(0, 200) : ""));
+    }
     var d = await r.json(); var t = "";
     (d.candidates || []).forEach(function (c) { (c.content?.parts || []).forEach(function (p) { if (p.text) t += p.text; }); });
     return t.trim() || null;
