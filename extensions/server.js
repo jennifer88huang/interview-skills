@@ -15,8 +15,8 @@ const MIME = {
   '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.txt': 'text/plain', '.md': 'text/plain',
 };
 
-const INJECT_HEAD = '\n<link rel="stylesheet" href="/extensions/export-md/export-md.css">\n<link rel="stylesheet" href="/extensions/mic-input/mic-input.css">\n';
-const INJECT_BODY = '\n<script src="/extensions/model-config/model-config.js"></script>\n<script src="/extensions/export-md/export-md.js"></script>\n<script src="/extensions/mic-input/mic-input.js"></script>\n<script>setInterval(function(){fetch("/api/heartbeat")},5000)</script>\n</body>';
+const INJECT_HEAD = '\n<link rel="stylesheet" href="/extensions/export-md/export-md.css">\n<link rel="stylesheet" href="/extensions/mic-input/mic-input.css">\n<link rel="stylesheet" href="/extensions/reference-answer/reference-answer.css">\n';
+const INJECT_BODY = '\n<script src="/extensions/model-config/model-config.js"></script>\n<script src="/extensions/export-md/export-md.js"></script>\n<script src="/extensions/mic-input/mic-input.js"></script>\n<script src="/extensions/reference-answer/reference-answer.js"></script>\n<script>setInterval(function(){fetch("/api/heartbeat")},5000)</script>\n</body>';
 // Injected BETWEEN storage.js and app.js
 const STORAGE_SYNC = '<script src="/extensions/storage-sync/storage-sync.js"></script>';
 let lastHeartbeat = 0; // only start counting after first heartbeat
