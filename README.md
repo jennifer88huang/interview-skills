@@ -1,15 +1,23 @@
 <div align="center">
 
-# Big Tech AI Mock Interviewer Skill
+# 大厂 AI 模拟面试官 Skill
 
-**大厂 AI 模拟面试官 Skill**
 
-Interview Skills is an AI mock interview coach for job seekers. It generates targeted mock interview questions from a real job description and a candidate resume. This skill simulates company-specific interview styles across technical rounds, behavioral rounds, HR interviews, salary negotiation, and full multi-round interview loops.
+[![Stars](https://img.shields.io/github/stars/jennifer88huang/interview-skills?style=social)](https://github.com/jennifer88huang/interview-skills/stargazers)
+[![Forks](https://img.shields.io/github/forks/jennifer88huang/interview-skills?style=social)](https://github.com/jennifer88huang/interview-skills/network/members)
+[![Last Commit](https://img.shields.io/github/last-commit/jennifer88huang/interview-skills)](https://github.com/jennifer88huang/interview-skills/commits/main)
+[![License](https://img.shields.io/badge/license-MIT-orange)](LICENSE)
+[![Version](https://img.shields.io/badge/version-1.0.0-green)]()
+
+
+<div align="center">
+    <a href="README.md">English</a> | <a href="README_zh.md">中文</a>
+</div>
+
+<br>
 
 大厂 AI 模拟面试官：基于 `JD + 简历` 生成专属面试问题，模拟更接近真实大厂风格的技术面、HR 面与薪资谈判。现已支持国内外大厂，如字节、腾讯、阿里、美团、Google、Meta、Amazon、Microsoft 等。
 
-[![Version](https://img.shields.io/badge/version-1.0.0-green)]()
-[![License](https://img.shields.io/badge/license-MIT-orange)]()
 
 **Live Demo / 在线体验： [Interview Skills AI Mock Interview Coach](https://jennifer88huang.github.io/interview-skills/)**
 
