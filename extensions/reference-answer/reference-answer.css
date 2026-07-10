@@ -1,0 +1,61 @@
+/* Reference Answer — consistent button styling regardless of parent */
+
+.inj-ref-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--accent, #0f766e);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--accent, #0f766e);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.inj-ref-btn:hover:not(:disabled) {
+  background: var(--accent, #0f766e);
+  color: #fff;
+}
+
+/* Right-align button inside feedback block */
+.inj-ref-btn-wrap {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 6px;
+}
+
+/* Ref block */
+.inj-ref-block {
+  margin-top: 8px;
+}
+
+.inj-ref-block .followup-block-label {
+  color: var(--accent, #0f766e);
+}
+
+.inj-ref-blockquote {
+  border-left: 3px solid var(--accent, #0f766e);
+  padding: 10px 14px;
+  margin: 8px 0 0;
+  background: var(--surface-soft, #f0fdf9);
+  color: var(--muted, #4a5a6a);
+  font-size: 13px;
+  line-height: 1.6;
+  border-radius: 0 6px 6px 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.inj-ref-blockquote.inj-ref-loaded {
+  font-style: normal;
+}
+
+.inj-ref-blockquote:focus {
+  outline: none;
+  border-left-color: var(--accent, #0f766e);
+  box-shadow: 0 0 0 4px var(--focus, rgba(15, 118, 110, 0.15));
+}
