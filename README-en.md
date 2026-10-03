@@ -50,6 +50,16 @@ If you have a job description and a resume, Interview Skills will tell you exact
 
 ## What It Does
 
+### Choose a report or a live practice session
+
+In an Agent using this skill, “mock interview” starts one question at a time.
+“Give me ten preparation questions with hints” retains the full report.
+Ask for feedback after each answer or defer it until the end; “hint”, “continue”,
+“skip this question” and “stop and review” control the current practice.
+HR role-play is interactive, while HR question lists and negotiation scripts remain available.
+The browser UI keeps its own interaction model.
+See the [enhancement plan](docs/interactive-interview-design.md) for scope and validation.
+
 - Parses the target job description into hard skills, soft skills, and hidden evaluation signals
 - Parses the resume to identify strengths, project evidence, risks, weak spots, and likely follow-up areas
 - Compares JD requirements against the resume and highlights strong matches, gaps, and weak spots
