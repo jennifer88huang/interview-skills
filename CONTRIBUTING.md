@@ -24,6 +24,23 @@ Open an issue describing the scenario you want to practice (e.g., a new company,
 4. Commit with a clear message: `git commit -m "Add: company profile for XYZ"`
 5. Push and open a PR against the `main` branch
 
+## Validate skill changes
+
+Before opening a skill PR, run the offline package and fixture checks:
+
+```sh
+python -m pip install -r tests/requirements.txt
+python -m unittest discover -s tests -v
+python scripts/check_skill.py --fixtures
+```
+
+Python 3.11+ is required. See [tests/README.md](tests/README.md) for check coverage,
+limitations, independent next-response replays and end-to-end interview testing.
+CI runs only offline structural checks; it does not score model behavior. For
+instruction changes, report the actual independent behavioral cases you ran,
+skill/model versions and evidence, including failures and cases not run. Keep
+private candidate material out of public fixtures and evaluation reports.
+
 ## Good First Issues
 
 If you are new to the project and looking for a starting point, look for issues labeled `good first issue`. These are typically documentation improvements, new company profiles, or small feature additions that do not require deep familiarity with the codebase.

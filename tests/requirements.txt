@@ -1,0 +1,2 @@
+# Offline validator only; no model SDK or credentials are required.
+PyYAML>=6.0,<7
