@@ -1,5 +1,9 @@
 # Chatbox Senior AI Chatbot / LLM App Interview Case
 
+> Source boundary: this is a third-party worked example, not the candidate's resume.
+> First-person answers below belong to this example. Use them as coaching illustrations;
+> do not attribute its implementations, metrics or roles to the user without their own evidence.
+
 > Use this case when the candidate is preparing for senior backend, AI
 > application engineer, LLM platform engineer, solution architect, or full-stack
 > product engineer interviews. The project focus is not "a generic ChatGPT
