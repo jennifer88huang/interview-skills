@@ -293,7 +293,9 @@
 
   async function callOpenAICompat(prompt, apiKey, model, provider) {
     var ep = getEndpoint(provider);
-    var r = await fetch(ep, { method: "POST", headers: { "Authorization": "Bearer " + apiKey, "Content-Type": "application/json" },
+    var headers = { "Authorization": "Bearer " + apiKey, "Content-Type": "application/json" };
+    if (ep === "https://api.perplexity.ai/chat/completions") headers["X-Pplx-Integration"] = "interview-skills";
+    var r = await fetch(ep, { method: "POST", headers: headers,
       body: JSON.stringify({ model: model, messages: [{ role: "user", content: prompt }], temperature: 0.4, max_tokens: 600 }) });
     if (!r.ok) {
       var errText = "";

@@ -1970,6 +1970,8 @@ async function callModel(prompt) {
     const headers = provider === "openrouter" ? {
       "HTTP-Referer": window.location.href,
       "X-Title": "interview-skills mock interview",
+    } : provider === "perplexity" ? {
+      "X-Pplx-Integration": "interview-skills",
     } : {};
     return callOpenAICompatible(prompt, endpoint, apiKey, model, headers);
   }
